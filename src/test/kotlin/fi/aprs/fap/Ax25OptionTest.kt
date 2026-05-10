@@ -88,6 +88,7 @@ class Ax25OptionTest {
                 packet = "OH7LZB>aprs:>status",
                 wantSrc = "OH7LZB",
                 wantDst = "APRS",
+                wantDigis = emptyList(),
             ),
         )
 
