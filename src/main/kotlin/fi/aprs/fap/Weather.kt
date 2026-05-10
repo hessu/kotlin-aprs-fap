@@ -7,36 +7,52 @@ import kotlin.math.round
 class Weather {
     /** Wind direction in degrees (0–360). */
     var windDirection: Double? = null
+
     /** Wind speed in m/s. */
     var windSpeed: Double? = null
+
     /** Wind gust speed in m/s. */
     var windGust: Double? = null
+
     /** Outdoor temperature in degrees Celsius. */
     var temp: Double? = null
+
     /** Indoor temperature in degrees Celsius. */
     var tempIn: Double? = null
+
     /** Relative humidity in percent (1–100). */
     var humidity: Int? = null
+
     /** Indoor humidity in percent (1–100). */
     var humidityIn: Int? = null
+
     /** Barometric pressure in millibars (hPa). */
     var pressure: Double? = null
+
     /** Rain in the last hour in mm. */
     var rain1h: Double? = null
+
     /** Rain in the last 24 hours in mm. */
     var rain24h: Double? = null
+
     /** Rain since midnight in mm. */
     var rainMidnight: Double? = null
+
     /** Snow in the last 24 hours in mm. */
     var snow24h: Double? = null
+
     /** Luminosity in watts per square meter. */
     var luminosity: Int? = null
+
     /** Water level above or below flood stage in meters. */
     var waterLevel: Double? = null
+
     /** Ionizing radiation in nanosieverts per hour. */
     var radiation: Double? = null
+
     /** Battery voltage in volts. */
     var batteryVoltage: Double? = null
+
     /** Software/device identifier string. */
     var software: String = ""
 
@@ -45,9 +61,9 @@ class Weather {
 
     fun hasData(): Boolean =
         windDirection != null || windSpeed != null || windGust != null ||
-        temp != null || tempIn != null || humidity != null || humidityIn != null ||
-        pressure != null || rain1h != null || rain24h != null || rainMidnight != null ||
-        snow24h != null || luminosity != null
+            temp != null || tempIn != null || humidity != null || humidityIn != null ||
+            pressure != null || rain1h != null || rain24h != null || rainMidnight != null ||
+            snow24h != null || luminosity != null
 }
 
 // ── Positionless weather ──────────────────────────────────────────────────────
@@ -67,7 +83,10 @@ internal fun Packet.parseWeatherPositionless(options: ParseOptions) {
 
 // ── Weather from position comment (symbol code '_') ───────────────────────────
 
-internal fun parseWeatherFromComment(comment: String, wxData: Weather): String {
+internal fun parseWeatherFromComment(
+    comment: String,
+    wxData: Weather,
+): String {
     if (comment.length < 7) return ""
 
     var data = comment
@@ -90,7 +109,10 @@ internal fun parseWeatherFromComment(comment: String, wxData: Weather): String {
 
 // ── Core weather field scanner ────────────────────────────────────────────────
 
-private fun parseWeatherFields(data: String, wx: Weather) {
+private fun parseWeatherFields(
+    data: String,
+    wx: Weather,
+) {
     var i = 0
     while (i < data.length) {
         if (i + 1 >= data.length) break
@@ -100,48 +122,94 @@ private fun parseWeatherFields(data: String, wx: Weather) {
         when (data[i]) {
             'c' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.windDirection = v.toDouble(); consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.windDirection = v.toDouble()
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             's' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.windSpeed = v * 0.44704; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.windSpeed = v * 0.44704
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'g' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.windGust = v * 0.44704; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.windGust = v * 0.44704
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             't' -> {
                 val (v, n) = parseWxSignedInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.temp = (v - 32.0) * 5.0 / 9.0; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.temp = (v - 32.0) * 5.0 / 9.0
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'r' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.rain1h = v * 0.254; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.rain1h = v * 0.254
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'p' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.rain24h = v * 0.254; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.rain24h = v * 0.254
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'P' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.rainMidnight = v * 0.254; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.rainMidnight = v * 0.254
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'h' -> {
                 var (v, n) = parseWxInt(data.substring(i + 1), 2)
-                if (n > 0) { if (v == 0) v = 100; wx.humidity = v; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 2); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    if (v == 0) v = 100
+                    wx.humidity = v
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 2)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'b' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 5)
-                if (n > 0) { wx.pressure = v / 10.0; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 5); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.pressure = v / 10.0
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 5)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'L', 'l' -> {
                 var (v, n) = parseWxInt(data.substring(i + 1), 3)
@@ -149,19 +217,32 @@ private fun parseWeatherFields(data: String, wx: Weather) {
                     if (data[i] == 'l') v += 1000
                     wx.luminosity = v
                     consumed = 1 + n
-                } else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'O' -> {
                 if (i + 1 < data.length && data[i + 1] == 's') {
                     val (v, n) = parseWxInt(data.substring(i + 2), 3)
-                    if (n > 0) { wx.snow24h = v * 0.254; consumed = 2 + n }
-                    else { val s = skipWxField(data.substring(i + 2), 3); if (s > 0) consumed = 2 + s }
+                    if (n > 0) {
+                        wx.snow24h = v * 0.254
+                        consumed = 2 + n
+                    } else {
+                        val s = skipWxField(data.substring(i + 2), 3)
+                        if (s > 0) consumed = 2 + s
+                    }
                 }
             }
             'F' -> {
                 val (v, n) = parseWxSignedInt(data.substring(i + 1), 4)
-                if (n > 0) { wx.waterLevel = v / 10.0 * 0.3048; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 4); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.waterLevel = v / 10.0 * 0.3048
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 4)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'X' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
@@ -170,17 +251,26 @@ private fun parseWeatherFields(data: String, wx: Weather) {
                     val exp = v % 10
                     wx.radiation = sig * 10.0.pow(exp.toDouble())
                     consumed = 1 + n
-                } else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             'V' -> {
                 val (v, n) = parseWxInt(data.substring(i + 1), 3)
-                if (n > 0) { wx.batteryVoltage = v / 10.0; consumed = 1 + n }
-                else { val s = skipWxField(data.substring(i + 1), 3); if (s > 0) consumed = 1 + s }
+                if (n > 0) {
+                    wx.batteryVoltage = v / 10.0
+                    consumed = 1 + n
+                } else {
+                    val s = skipWxField(data.substring(i + 1), 3)
+                    if (s > 0) consumed = 1 + s
+                }
             }
             '#' -> {
                 val s = skipWxField(data.substring(i + 1), 3)
-                if (s > 0) consumed = 1 + s
-                else {
+                if (s > 0) {
+                    consumed = 1 + s
+                } else {
                     val (_, n) = parseWxInt(data.substring(i + 1), 3)
                     if (n > 0) consumed = 1 + n
                 }
@@ -206,7 +296,10 @@ internal fun isSoftwareID(s: String): Boolean {
     return s.all { it in 'a'..'z' || it in 'A'..'Z' || it.isDigit() || it == '-' || it == '_' }
 }
 
-private fun skipWxField(s: String, maxLen: Int): Int {
+private fun skipWxField(
+    s: String,
+    maxLen: Int,
+): Int {
     if (s.length < maxLen) return 0
     for (i in 0 until maxLen) {
         if (s[i] != '.' && s[i] != ' ') return 0
@@ -214,7 +307,10 @@ private fun skipWxField(s: String, maxLen: Int): Int {
     return maxLen
 }
 
-private fun parseWxInt(s: String, maxDigits: Int): Pair<Int, Int> {
+private fun parseWxInt(
+    s: String,
+    maxDigits: Int,
+): Pair<Int, Int> {
     if (s.length < maxDigits) return Pair(0, 0)
     val field = s.substring(0, maxDigits)
     if (field.all { it == '.' || it == ' ' }) return Pair(0, 0)
@@ -222,7 +318,10 @@ private fun parseWxInt(s: String, maxDigits: Int): Pair<Int, Int> {
     return Pair(v, maxDigits)
 }
 
-private fun parseWxSignedInt(s: String, maxDigits: Int): Pair<Int, Int> {
+private fun parseWxSignedInt(
+    s: String,
+    maxDigits: Int,
+): Pair<Int, Int> {
     if (s.length < maxDigits) return Pair(0, 0)
     val field = s.substring(0, maxDigits)
     if (field.all { it == '.' || it == ' ' }) return Pair(0, 0)
@@ -247,12 +346,15 @@ internal fun Packet.parseULTW(options: ParseOptions) {
     ultwShift(vals)?.let { v -> wx.rainMidnight = round(v * 0.254 * 10) / 10 }
     val pres = ultwShift(vals)
     if (pres != null && pres >= 10) wx.pressure = pres / 10.0
-    ultwShift(vals); ultwShift(vals); ultwShift(vals) // skip baro delta, corr lsw, corr msw
+    ultwShift(vals)
+    ultwShift(vals)
+    ultwShift(vals) // skip baro delta, corr lsw, corr msw
     ultwShift(vals)?.let { v ->
         val h = v / 10
         if (h in 1..100) wx.humidity = h
     }
-    ultwShift(vals); ultwShift(vals) // skip date, time
+    ultwShift(vals)
+    ultwShift(vals) // skip date, time
     ultwShift(vals)?.let { v -> wx.rainMidnight = round(v * 0.254 * 10) / 10 }
     ultwShift(vals)?.let { wx.windSpeed = ultwWindSpeed(it) }
 
@@ -285,7 +387,8 @@ internal fun Packet.parseULTWLogging(options: ParseOptions) {
         val h = v / 10
         if (h in 1..100) wx.humidityIn = h
     }
-    ultwShift(vals); ultwShift(vals) // skip date, time
+    ultwShift(vals)
+    ultwShift(vals) // skip date, time
     ultwShift(vals)?.let { v -> wx.rainMidnight = round(v * 0.254 * 10) / 10 }
     ultwShift(vals)?.let { wx.windSpeed = ultwWindSpeed(it) }
 

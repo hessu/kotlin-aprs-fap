@@ -3,7 +3,6 @@ package fi.aprs.fap
 import kotlin.test.*
 
 class PositionFallbackTest {
-
     @Test
     fun testFallbackUncompressed() {
         val packet = "OH2RDP-1>BEACON-15,OH2RDG*,WIDE:hoponassualku!6028.51S/02505.68W#PHG7220/RELAY,WIDE, OH2AP Jarvenpaa"
@@ -29,7 +28,7 @@ class PositionFallbackTest {
     @Test
     fun testFallbackExclAtOffset39() {
         val padding = "012345678901234567890123456789012345678" // 39 chars
-        val packet = "OH2RDP-1>BEACON-15:${padding}!6028.51N/02505.68E#"
+        val packet = "OH2RDP-1>BEACON-15:$padding!6028.51N/02505.68E#"
         val p = parse(packet)
         assertEquals(PacketType.LOCATION, p.type)
         assertEquals(60.4752, p.latitude!!, 0.0001)
@@ -38,7 +37,7 @@ class PositionFallbackTest {
     @Test
     fun testFallbackExclAtOffset40() {
         val padding = "0123456789012345678901234567890123456789" // 40 chars
-        val packet = "OH2RDP-1>BEACON-15:${padding}!6028.51N/02505.68E#"
+        val packet = "OH2RDP-1>BEACON-15:$padding!6028.51N/02505.68E#"
         val ex = assertFailsWith<ParseException> { parse(packet) }
         assertEquals(ParseError.TYPE_NOT_SUPPORTED, ex.code)
     }

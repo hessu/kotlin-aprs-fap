@@ -1,0 +1,10 @@
+root = true
+
+[*.{kt,kts}]
+max_line_length = 140
+# kotlin.test.* is the standard wildcard import for Kotlin test files
+ij_kotlin_packages_to_use_import_on_demand = kotlin.test
+
+[src/test/**/*.kt]
+# APRS packet strings are inherently long; don't enforce line length in tests
+ktlint_standard_max-line-length = disabled

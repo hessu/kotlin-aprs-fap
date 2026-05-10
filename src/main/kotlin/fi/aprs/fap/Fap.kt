@@ -7,7 +7,10 @@ package fi.aprs.fap
  * Throws [ParseException] on failure; the exception carries the partially-parsed
  * packet in [ParseException.packet] so callers can inspect fields decoded before the error.
  */
-fun parse(raw: ByteArray, options: ParseOptions = ParseOptions()): Packet {
+fun parse(
+    raw: ByteArray,
+    options: ParseOptions = ParseOptions(),
+): Packet {
     val p = Packet(raw)
 
     val colonIdx = raw.indexOf(':'.code.toByte())
@@ -26,8 +29,10 @@ fun parse(raw: ByteArray, options: ParseOptions = ParseOptions()): Packet {
  * Convenience overload accepting a [String]. The string is encoded as ISO-8859-1
  * before parsing, matching how APRS-IS packets appear on a stream.
  */
-fun parse(raw: String, options: ParseOptions = ParseOptions()): Packet =
-    parse(raw.toByteArray(Charsets.ISO_8859_1), options)
+fun parse(
+    raw: String,
+    options: ParseOptions = ParseOptions(),
+): Packet = parse(raw.toByteArray(Charsets.ISO_8859_1), options)
 
 /**
  * Validates and normalizes an AX.25 callsign.
@@ -110,8 +115,9 @@ internal fun Packet.parseHeader(options: ParseOptions) {
         if (call.isEmpty()) fail(ParseError.DIGI_EMPTY, "empty digipeater callsign")
 
         if (options.isAX25) {
-            val normalized = checkAX25Call(call)
-                ?: fail(ParseError.DIGICALL_NOAX25, "digipeater callsign is not a valid AX.25 call")
+            val normalized =
+                checkAX25Call(call)
+                    ?: fail(ParseError.DIGICALL_NOAX25, "digipeater callsign is not a valid AX.25 call")
             digipeaters = digipeaters + Digipeater(normalized, wasDigied)
         } else {
             if (isValidDigiCall(call)) {
@@ -203,13 +209,18 @@ fun Packet.isBeacon(): Boolean = dstCallsign in beaconDestinations
 
 // ── Callsign validation helpers ───────────────────────────────────────────────
 
-private fun isAlnumDash(s: String, maxLen: Int): Boolean {
+private fun isAlnumDash(
+    s: String,
+    maxLen: Int,
+): Boolean {
     if (s.isEmpty() || s.length > maxLen) return false
     return s.all { it.isDigit() || it in 'A'..'Z' || it in 'a'..'z' || it == '-' }
 }
 
 private fun isValidSrcCall(s: String): Boolean = isAlnumDash(s, 9)
+
 private fun isValidDigiCall(s: String): Boolean = isAlnumDash(s, 9)
+
 private fun isQConstruct(s: String): Boolean = s.length == 3 && s[0] == 'q'
 
 internal fun isIPv6Hex(s: String): Boolean {

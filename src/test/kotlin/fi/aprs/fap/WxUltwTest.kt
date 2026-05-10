@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap wx_ultw_test.go
 
 class WxUltwTest {
-
     @Test
     fun testULTW() {
         val packet = "N0CALL-14>APN391,WIDE2-1,qAo,IGATE-3:\$ULTW0053002D028D02FA2813000D87BD000103E8015703430010000C"

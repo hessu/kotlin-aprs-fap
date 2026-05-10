@@ -1,7 +1,7 @@
 package fi.aprs.fap
 
-import java.time.ZonedDateTime
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import kotlin.math.abs
 import kotlin.math.pow
 
@@ -55,12 +55,14 @@ private fun Packet.parseGPRMC(parts: List<String>) {
 
     parseGPRMCTimestamp(parts[1], parts[9])
 
-    val latResult = runCatching { parseNMEACoordWithRes(parts[3], parts[4], false) }
-        .getOrElse { fail(ParseError.POS_LAT_INV, "GPRMC: ${it.message}") }
+    val latResult =
+        runCatching { parseNMEACoordWithRes(parts[3], parts[4], false) }
+            .getOrElse { fail(ParseError.POS_LAT_INV, "GPRMC: ${it.message}") }
     latitude = latResult.value
 
-    val lonResult = runCatching { parseNMEACoordWithRes(parts[5], parts[6], true) }
-        .getOrElse { fail(ParseError.POS_LON_INV, "GPRMC: ${it.message}") }
+    val lonResult =
+        runCatching { parseNMEACoordWithRes(parts[5], parts[6], true) }
+            .getOrElse { fail(ParseError.POS_LON_INV, "GPRMC: ${it.message}") }
     longitude = lonResult.value
 
     posResolution = maxOf(latResult.resolution, lonResult.resolution)
@@ -72,7 +74,11 @@ private fun Packet.parseGPRMC(parts: List<String>) {
     if (parts[8].isNotEmpty()) {
         parts[8].toDoubleOrNull()?.let { cf ->
             var c = (cf + 0.5).toInt()
-            if (c == 0) c = 360 else if (c > 360) c = 0
+            if (c == 0) {
+                c = 360
+            } else if (c > 360) {
+                c = 0
+            }
             course = c
         }
     } else {
@@ -80,7 +86,10 @@ private fun Packet.parseGPRMC(parts: List<String>) {
     }
 }
 
-private fun Packet.parseGPRMCTimestamp(timeStr: String, dateStr: String) {
+private fun Packet.parseGPRMCTimestamp(
+    timeStr: String,
+    dateStr: String,
+) {
     var t = timeStr.trim()
     val dotIdx = t.indexOf('.')
     if (dotIdx >= 0) t = t.substring(0, dotIdx)
@@ -109,12 +118,14 @@ private fun Packet.parseGPGGA(parts: List<String>) {
 
     if (parts[6] == "0") fail(ParseError.NMEA_INVALID, "GPGGA: no valid fix")
 
-    val latResult = runCatching { parseNMEACoordWithRes(parts[2], parts[3], false) }
-        .getOrElse { fail(ParseError.POS_LAT_INV, "GPGGA: ${it.message}") }
+    val latResult =
+        runCatching { parseNMEACoordWithRes(parts[2], parts[3], false) }
+            .getOrElse { fail(ParseError.POS_LAT_INV, "GPGGA: ${it.message}") }
     latitude = latResult.value
 
-    val lonResult = runCatching { parseNMEACoordWithRes(parts[4], parts[5], true) }
-        .getOrElse { fail(ParseError.POS_LON_INV, "GPGGA: ${it.message}") }
+    val lonResult =
+        runCatching { parseNMEACoordWithRes(parts[4], parts[5], true) }
+            .getOrElse { fail(ParseError.POS_LON_INV, "GPGGA: ${it.message}") }
     longitude = lonResult.value
 
     posResolution = maxOf(latResult.resolution, lonResult.resolution)
@@ -127,12 +138,14 @@ private fun Packet.parseGPGGA(parts: List<String>) {
 private fun Packet.parseGPGLL(parts: List<String>) {
     if (parts.size < 5) fail(ParseError.NMEA_SHORT, "GPGLL sentence too short")
 
-    val latResult = runCatching { parseNMEACoordWithRes(parts[1], parts[2], false) }
-        .getOrElse { fail(ParseError.POS_LAT_INV, "GPGLL: ${it.message}") }
+    val latResult =
+        runCatching { parseNMEACoordWithRes(parts[1], parts[2], false) }
+            .getOrElse { fail(ParseError.POS_LAT_INV, "GPGLL: ${it.message}") }
     latitude = latResult.value
 
-    val lonResult = runCatching { parseNMEACoordWithRes(parts[3], parts[4], true) }
-        .getOrElse { fail(ParseError.POS_LON_INV, "GPGLL: ${it.message}") }
+    val lonResult =
+        runCatching { parseNMEACoordWithRes(parts[3], parts[4], true) }
+            .getOrElse { fail(ParseError.POS_LON_INV, "GPGLL: ${it.message}") }
     longitude = lonResult.value
 
     posResolution = maxOf(latResult.resolution, lonResult.resolution)
@@ -142,7 +155,11 @@ private fun Packet.parseGPGLL(parts: List<String>) {
 
 internal data class NMEACoordResult(val value: Double, val resolution: Double)
 
-internal fun parseNMEACoordWithRes(coord: String, hemisphere: String, isLon: Boolean): NMEACoordResult {
+internal fun parseNMEACoordWithRes(
+    coord: String,
+    hemisphere: String,
+    isLon: Boolean,
+): NMEACoordResult {
     if (coord.isEmpty() || hemisphere.isEmpty()) {
         throw Exception("empty coordinate or hemisphere")
     }
@@ -151,11 +168,13 @@ internal fun parseNMEACoordWithRes(coord: String, hemisphere: String, isLon: Boo
 
     if (coord.length < degLen + 1) throw Exception("coordinate too short")
 
-    val deg = coord.substring(0, degLen).toDoubleOrNull()
-        ?: throw Exception("invalid degrees: ${coord.substring(0, degLen)}")
+    val deg =
+        coord.substring(0, degLen).toDoubleOrNull()
+            ?: throw Exception("invalid degrees: ${coord.substring(0, degLen)}")
 
-    val min = coord.substring(degLen).toDoubleOrNull()
-        ?: throw Exception("invalid minutes: ${coord.substring(degLen)}")
+    val min =
+        coord.substring(degLen).toDoubleOrNull()
+            ?: throw Exception("invalid minutes: ${coord.substring(degLen)}")
 
     var result = deg + min / 60.0
 

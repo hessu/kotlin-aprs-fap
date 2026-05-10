@@ -9,7 +9,10 @@ private class AmbiguityException(message: String) : Exception(message)
 
 // ── Position entry points ─────────────────────────────────────────────────────
 
-internal fun Packet.parsePositionNoTimestamp(options: ParseOptions, typeChar: Char) {
+internal fun Packet.parsePositionNoTimestamp(
+    options: ParseOptions,
+    typeChar: Char,
+) {
     type = PacketType.LOCATION
     messaging = (typeChar == '=')
 
@@ -23,7 +26,10 @@ internal fun Packet.parsePositionNoTimestamp(options: ParseOptions, typeChar: Ch
     }
 }
 
-internal fun Packet.parsePositionWithTimestamp(options: ParseOptions, typeChar: Char) {
+internal fun Packet.parsePositionWithTimestamp(
+    options: ParseOptions,
+    typeChar: Char,
+) {
     type = PacketType.LOCATION
     messaging = (typeChar == '@')
 
@@ -53,18 +59,22 @@ internal fun Packet.parsePositionWithTimestamp(options: ParseOptions, typeChar: 
 
 // ── Uncompressed position ─────────────────────────────────────────────────────
 
-internal fun Packet.parseUncompressedPosition(bodyStr: String, options: ParseOptions) {
+internal fun Packet.parseUncompressedPosition(
+    bodyStr: String,
+    options: ParseOptions,
+) {
     format = Format.UNCOMPRESSED
 
     if (bodyStr.length < 19) fail(ParseError.POS_SHORT, "uncompressed position too short")
 
-    val (lat, ambiguity) = try {
-        parseUncompressedLat(bodyStr.substring(0, 8))
-    } catch (e: AmbiguityException) {
-        fail(ParseError.LOC_AMB_INV, e.message ?: "invalid position ambiguity")
-    } catch (e: Exception) {
-        fail(ParseError.LOC_INV, "invalid latitude: ${e.message}")
-    }
+    val (lat, ambiguity) =
+        try {
+            parseUncompressedLat(bodyStr.substring(0, 8))
+        } catch (e: AmbiguityException) {
+            fail(ParseError.LOC_AMB_INV, e.message ?: "invalid position ambiguity")
+        } catch (e: Exception) {
+            fail(ParseError.LOC_INV, "invalid latitude: ${e.message}")
+        }
 
     latitude = lat
     posAmbiguity = ambiguity
@@ -75,13 +85,14 @@ internal fun Packet.parseUncompressedPosition(bodyStr: String, options: ParseOpt
     }
     symbolTable = symTable
 
-    val lon = try {
-        parseUncompressedLon(bodyStr.substring(9, 18), ambiguity)
-    } catch (e: AmbiguityException) {
-        fail(ParseError.LOC_AMB_INV, e.message ?: "invalid position ambiguity")
-    } catch (e: Exception) {
-        fail(ParseError.POS_LON_INV, "invalid longitude: ${e.message}")
-    }
+    val lon =
+        try {
+            parseUncompressedLon(bodyStr.substring(9, 18), ambiguity)
+        } catch (e: AmbiguityException) {
+            fail(ParseError.LOC_AMB_INV, e.message ?: "invalid position ambiguity")
+        } catch (e: Exception) {
+            fail(ParseError.POS_LON_INV, "invalid longitude: ${e.message}")
+        }
     longitude = lon
 
     symbolCode = bodyStr[18]
@@ -96,26 +107,31 @@ internal fun Packet.parseUncompressedPosition(bodyStr: String, options: ParseOpt
 
 // ── Compressed position ───────────────────────────────────────────────────────
 
-internal fun Packet.parseCompressedPosition(bodyStr: String, options: ParseOptions) {
+internal fun Packet.parseCompressedPosition(
+    bodyStr: String,
+    options: ParseOptions,
+) {
     format = Format.COMPRESSED
 
     if (bodyStr.length < 13) fail(ParseError.COMP_SHORT, "compressed position too short")
 
     symbolTable = bodyStr[0]
 
-    val lat = 90.0 - (
-        (bodyStr[1].code - 33) * 91 * 91 * 91 +
-        (bodyStr[2].code - 33) * 91 * 91 +
-        (bodyStr[3].code - 33) * 91 +
-        (bodyStr[4].code - 33)
-    ).toDouble() / 380926.0
+    val lat =
+        90.0 - (
+            (bodyStr[1].code - 33) * 91 * 91 * 91 +
+                (bodyStr[2].code - 33) * 91 * 91 +
+                (bodyStr[3].code - 33) * 91 +
+                (bodyStr[4].code - 33)
+        ).toDouble() / 380926.0
 
-    val lon = -180.0 + (
-        (bodyStr[5].code - 33) * 91 * 91 * 91 +
-        (bodyStr[6].code - 33) * 91 * 91 +
-        (bodyStr[7].code - 33) * 91 +
-        (bodyStr[8].code - 33)
-    ).toDouble() / 190463.0
+    val lon =
+        -180.0 + (
+            (bodyStr[5].code - 33) * 91 * 91 * 91 +
+                (bodyStr[6].code - 33) * 91 * 91 +
+                (bodyStr[7].code - 33) * 91 +
+                (bodyStr[8].code - 33)
+        ).toDouble() / 190463.0
 
     latitude = lat
     longitude = lon
@@ -280,7 +296,7 @@ internal fun Packet.parseDAO(comment: String): String {
                 s = s.substring(0, i) + s.substring(i + 5)
                 break
             }
-            if (datumByte in 'a'..'z' && d1 in '!'..'{'  && d2 in '!'..'{'  ) {
+            if (datumByte in 'a'..'z' && d1 in '!'..'{' && d2 in '!'..'{') {
                 daoDatumByte = datumByte.uppercaseChar()
                 applyBase91DAO(d1, d2)
                 s = s.substring(0, i) + s.substring(i + 5)
@@ -292,7 +308,10 @@ internal fun Packet.parseDAO(comment: String): String {
     return s
 }
 
-private fun Packet.applyHumanDAO(d1: Char, d2: Char) {
+private fun Packet.applyHumanDAO(
+    d1: Char,
+    d2: Char,
+) {
     val lat = latitude ?: return
     val lon = longitude ?: return
     val latAdd = (d1 - '0') * 0.001 / 60.0
@@ -302,7 +321,10 @@ private fun Packet.applyHumanDAO(d1: Char, d2: Char) {
     posResolution = 1.852
 }
 
-private fun Packet.applyBase91DAO(d1: Char, d2: Char) {
+private fun Packet.applyBase91DAO(
+    d1: Char,
+    d2: Char,
+) {
     val lat = latitude ?: return
     val lon = longitude ?: return
     val latAdd = (d1.code - 33) / 91.0 * 0.01 / 60.0
@@ -353,7 +375,10 @@ private fun parseDegreesMinutes(
     for ((idx, pos) in minPositions.withIndex()) {
         val c = s[pos]
         when {
-            c == ' ' -> { minDigits[idx] = 0; isSpace[idx] = true }
+            c == ' ' -> {
+                minDigits[idx] = 0
+                isSpace[idx] = true
+            }
             c.isDigit() -> minDigits[idx] = c - '0'
             else -> throw Exception("invalid minute character at position $pos: $c")
         }
@@ -379,13 +404,17 @@ private fun parseDegreesMinutes(
     var mm = minDigits[0] * 10.0 + minDigits[1] + minDigits[2] * 0.1 + minDigits[3] * 0.01
 
     if (ambiguity > 0) {
-        mm = when (ambiguity) {
-            1 -> floor(mm / 0.1) * 0.1 + 0.05
-            2 -> floor(mm) + 0.5
-            3 -> floor(mm / 10) * 10 + 5.0
-            4 -> { deg = floor(deg); 30.0 }
-            else -> mm
-        }
+        mm =
+            when (ambiguity) {
+                1 -> floor(mm / 0.1) * 0.1 + 0.05
+                2 -> floor(mm) + 0.5
+                3 -> floor(mm / 10) * 10 + 5.0
+                4 -> {
+                    deg = floor(deg)
+                    30.0
+                }
+                else -> mm
+            }
     }
 
     return DegMin(deg, mm, ambiguity)
@@ -408,7 +437,10 @@ private fun parseUncompressedLat(s: String): Pair<Double, Int> {
     return Pair(lat, dm.ambiguity)
 }
 
-private fun parseUncompressedLon(s: String, ambiguity: Int): Double {
+private fun parseUncompressedLon(
+    s: String,
+    ambiguity: Int,
+): Double {
     if (s.length != 9) throw Exception("longitude must be 9 characters, got ${s.length}")
 
     val hemisphere = s[8]
@@ -427,28 +459,27 @@ private fun parseUncompressedLon(s: String, ambiguity: Int): Double {
 
 // ── Symbol table / position validation helpers ────────────────────────────────
 
-private fun isValidSymbolTable(c: Char): Boolean =
-    c == '/' || c == '\\' || c in 'A'..'Z' || c in '0'..'9'
+private fun isValidSymbolTable(c: Char): Boolean = c == '/' || c == '\\' || c in 'A'..'Z' || c in '0'..'9'
 
-internal fun isCompressedTableChar(c: Char): Boolean =
-    c == '/' || c == '\\' || c in 'A'..'Z' || c in 'a'..'j'
+internal fun isCompressedTableChar(c: Char): Boolean = c == '/' || c == '\\' || c in 'A'..'Z' || c in 'a'..'j'
 
 private fun isPhgBase(s: String): Boolean =
     s.length >= 4 &&
-    s[0].isDigit() &&
-    s[1].code in 0x30..0x7e &&
-    s[2].isDigit() &&
-    s[3].isDigit()
+        s[0].isDigit() &&
+        s[1].code in 0x30..0x7e &&
+        s[2].isDigit() &&
+        s[3].isDigit()
 
 private fun isUpperAlphaNum(c: Char): Boolean = c.isDigit() || c in 'A'..'Z'
 
 // ── Position resolution ───────────────────────────────────────────────────────
 
-private fun posResolution(ambiguity: Int): Double = when (ambiguity) {
-    0 -> 1852.0 / 100.0
-    1 -> 1852.0 / 10.0
-    2 -> 1852.0
-    3 -> 1852.0 * 10.0
-    4 -> 1852.0 * 60.0
-    else -> 1852.0 / 100.0
-}
+private fun posResolution(ambiguity: Int): Double =
+    when (ambiguity) {
+        0 -> 1852.0 / 100.0
+        1 -> 1852.0 / 10.0
+        2 -> 1852.0
+        3 -> 1852.0 * 10.0
+        4 -> 1852.0 * 60.0
+        else -> 1852.0 / 100.0
+    }

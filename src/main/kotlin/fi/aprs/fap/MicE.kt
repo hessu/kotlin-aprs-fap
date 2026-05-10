@@ -4,41 +4,42 @@ package fi.aprs.fap
 
 private data class MicEDestInfo(val digit: Int, val msgBit: Int, val isNorth: Boolean)
 
-private val micEDestTable: Map<Char, MicEDestInfo> = mapOf(
-    '0' to MicEDestInfo(0, 0, false),
-    '1' to MicEDestInfo(1, 0, false),
-    '2' to MicEDestInfo(2, 0, false),
-    '3' to MicEDestInfo(3, 0, false),
-    '4' to MicEDestInfo(4, 0, false),
-    '5' to MicEDestInfo(5, 0, false),
-    '6' to MicEDestInfo(6, 0, false),
-    '7' to MicEDestInfo(7, 0, false),
-    '8' to MicEDestInfo(8, 0, false),
-    '9' to MicEDestInfo(9, 0, false),
-    'A' to MicEDestInfo(0, 1, false),
-    'B' to MicEDestInfo(1, 1, false),
-    'C' to MicEDestInfo(2, 1, false),
-    'D' to MicEDestInfo(3, 1, false),
-    'E' to MicEDestInfo(4, 1, false),
-    'F' to MicEDestInfo(5, 1, false),
-    'G' to MicEDestInfo(6, 1, false),
-    'H' to MicEDestInfo(7, 1, false),
-    'I' to MicEDestInfo(8, 1, false),
-    'J' to MicEDestInfo(9, 1, false),
-    'K' to MicEDestInfo(0, 1, false),
-    'L' to MicEDestInfo(0, 0, false),
-    'P' to MicEDestInfo(0, 1, true),
-    'Q' to MicEDestInfo(1, 1, true),
-    'R' to MicEDestInfo(2, 1, true),
-    'S' to MicEDestInfo(3, 1, true),
-    'T' to MicEDestInfo(4, 1, true),
-    'U' to MicEDestInfo(5, 1, true),
-    'V' to MicEDestInfo(6, 1, true),
-    'W' to MicEDestInfo(7, 1, true),
-    'X' to MicEDestInfo(8, 1, true),
-    'Y' to MicEDestInfo(9, 1, true),
-    'Z' to MicEDestInfo(0, 1, true),
-)
+private val micEDestTable: Map<Char, MicEDestInfo> =
+    mapOf(
+        '0' to MicEDestInfo(0, 0, false),
+        '1' to MicEDestInfo(1, 0, false),
+        '2' to MicEDestInfo(2, 0, false),
+        '3' to MicEDestInfo(3, 0, false),
+        '4' to MicEDestInfo(4, 0, false),
+        '5' to MicEDestInfo(5, 0, false),
+        '6' to MicEDestInfo(6, 0, false),
+        '7' to MicEDestInfo(7, 0, false),
+        '8' to MicEDestInfo(8, 0, false),
+        '9' to MicEDestInfo(9, 0, false),
+        'A' to MicEDestInfo(0, 1, false),
+        'B' to MicEDestInfo(1, 1, false),
+        'C' to MicEDestInfo(2, 1, false),
+        'D' to MicEDestInfo(3, 1, false),
+        'E' to MicEDestInfo(4, 1, false),
+        'F' to MicEDestInfo(5, 1, false),
+        'G' to MicEDestInfo(6, 1, false),
+        'H' to MicEDestInfo(7, 1, false),
+        'I' to MicEDestInfo(8, 1, false),
+        'J' to MicEDestInfo(9, 1, false),
+        'K' to MicEDestInfo(0, 1, false),
+        'L' to MicEDestInfo(0, 0, false),
+        'P' to MicEDestInfo(0, 1, true),
+        'Q' to MicEDestInfo(1, 1, true),
+        'R' to MicEDestInfo(2, 1, true),
+        'S' to MicEDestInfo(3, 1, true),
+        'T' to MicEDestInfo(4, 1, true),
+        'U' to MicEDestInfo(5, 1, true),
+        'V' to MicEDestInfo(6, 1, true),
+        'W' to MicEDestInfo(7, 1, true),
+        'X' to MicEDestInfo(8, 1, true),
+        'Y' to MicEDestInfo(9, 1, true),
+        'Z' to MicEDestInfo(0, 1, true),
+    )
 
 // ── Main Mic-E parser ─────────────────────────────────────────────────────────
 
@@ -95,11 +96,11 @@ internal fun Packet.parseMicE(options: ParseOptions) {
         val a1 = comment[braceIdx - 3]
         val a2 = comment[braceIdx - 2]
         val a3 = comment[braceIdx - 1]
-        if (a1 in '!'..'{'  && a2 in '!'..'{'  && a3 in '!'..'{'  ) {
+        if (a1 in '!'..'{' && a2 in '!'..'{' && a3 in '!'..'{') {
             altitude = (
                 (a1.code - 33) * 91 * 91 +
-                (a2.code - 33) * 91 +
-                (a3.code - 33)
+                    (a2.code - 33) * 91 +
+                    (a3.code - 33)
             ).toDouble() - 10000.0
             comment = comment.substring(0, braceIdx - 3) + comment.substring(braceIdx + 1)
         }
@@ -142,8 +143,10 @@ internal fun Packet.parseMicEMangled(options: ParseOptions) {
         b3 in 0x1C..0x7F &&
         b4 == 0x20 &&
         b5 in 0x21..0x7D &&
-        (b6 == '/'.code || b6 == '\\'.code ||
-            (b6 in 'A'.code..'Z'.code) || (b6 in '0'.code..'9'.code))
+        (
+            b6 == '/'.code || b6 == '\\'.code ||
+                (b6 in 'A'.code..'Z'.code) || (b6 in '0'.code..'9'.code)
+        )
     ) {
         // Insert missing space at position 5 to restore 8-byte layout
         val fixed = ByteArray(info.size + 1)
@@ -192,8 +195,9 @@ private fun Packet.decodeMicEDest(dst: String): MicEDestResult {
     var isWest = false
 
     for (i in 0 until 6) {
-        val info = micEDestTable[dst[i]]
-            ?: fail(ParseError.MICE_INV_DSTCALL, "invalid Mic-E destination character: ${dst[i]}")
+        val info =
+            micEDestTable[dst[i]]
+                ?: fail(ParseError.MICE_INV_DSTCALL, "invalid Mic-E destination character: ${dst[i]}")
         latDigits[i] = info.digit
         if (i < 3) msgBuf[i] = '0' + info.msgBit
         if (i == 3 && info.isNorth) isNorth = true
@@ -209,10 +213,17 @@ private fun Packet.decodeMicEDest(dst: String): MicEDestResult {
     return MicEDestResult(lat, isNorth, lonOffset, isWest, String(msgBuf))
 }
 
-private fun Packet.decodeMicELon(info: ByteArray, lonOffset: Int, isWest: Boolean) {
+private fun Packet.decodeMicELon(
+    info: ByteArray,
+    lonOffset: Int,
+    isWest: Boolean,
+) {
     var lonDeg = info[0].toInt().and(0xFF) - 28 + lonOffset
-    if (lonDeg in 180..189) lonDeg -= 80
-    else if (lonDeg in 190..199) lonDeg -= 190
+    if (lonDeg in 180..189) {
+        lonDeg -= 80
+    } else if (lonDeg in 190..199) {
+        lonDeg -= 190
+    }
 
     var lonMin = info[1].toInt().and(0xFF) - 28
     if (lonMin >= 60) lonMin -= 60
@@ -224,8 +235,7 @@ private fun Packet.decodeMicELon(info: ByteArray, lonOffset: Int, isWest: Boolea
     longitude = lon
 }
 
-private fun isValidMicESymbolTable(c: Char): Boolean =
-    c == '/' || c == '\\' || c in 'A'..'Z' || c in '0'..'9'
+private fun isValidMicESymbolTable(c: Char): Boolean = c == '/' || c == '\\' || c in 'A'..'Z' || c in '0'..'9'
 
 // ── Base-91 telemetry in Mic-E comments ──────────────────────────────────────
 
@@ -235,13 +245,19 @@ internal fun Packet.parseMicEBase91Telemetry(comment: String): String {
 
     var end = comment.length - 1
     while (end >= 0) {
-        if (comment[end] != '|') { end--; continue }
+        if (comment[end] != '|') {
+            end--
+            continue
+        }
         var start = end - 1
         while (start >= 0) {
-            if (comment[start] != '|') { start--; continue }
+            if (comment[start] != '|') {
+                start--
+                continue
+            }
             val content = comment.substring(start + 1, end)
             if (content.length >= 4 && content.length % 2 == 0 &&
-                content.all { it in '!'..'{'  }
+                content.all { it in '!'..'{' }
             ) {
                 if (start > bestStart) {
                     bestStart = start
@@ -292,11 +308,12 @@ internal fun Packet.parseMicETelemetry(comment: String): String {
     if (comment.length < 2 || comment[0] != '\'') return comment
 
     val rest = comment.substring(1)
-    val hexLen = when {
-        rest.length >= 10 && isHexString(rest.substring(0, 10)) -> 10
-        rest.length >= 4 && isHexString(rest.substring(0, 4)) -> 4
-        else -> return comment
-    }
+    val hexLen =
+        when {
+            rest.length >= 10 && isHexString(rest.substring(0, 10)) -> 10
+            rest.length >= 4 && isHexString(rest.substring(0, 4)) -> 4
+            else -> return comment
+        }
 
     val hex = rest.substring(0, hexLen)
     val vals: MutableList<Double?> = mutableListOf()
@@ -304,7 +321,9 @@ internal fun Packet.parseMicETelemetry(comment: String): String {
     if (hexLen == 4) {
         val v1 = hex.substring(0, 2).toLong(16).toDouble()
         val v3 = hex.substring(2, 4).toLong(16).toDouble()
-        vals.add(v1); vals.add(0.0); vals.add(v3)
+        vals.add(v1)
+        vals.add(0.0)
+        vals.add(v3)
     } else {
         for (i in 0 until hexLen step 2) {
             vals.add(hex.substring(i, i + 2).toLong(16).toDouble())
@@ -316,27 +335,28 @@ internal fun Packet.parseMicETelemetry(comment: String): String {
     return rest.substring(hexLen).trimStart()
 }
 
-private fun isHexString(s: String): Boolean =
-    s.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+private fun isHexString(s: String): Boolean = s.all { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
 
 // ── MBits → human-readable message type ──────────────────────────────────────
 
 /** Converts Mic-E message bits to a human-readable status string. */
-fun micEMBitsToMessage(mbits: String): String = when (mbits) {
-    "111" -> "Off Duty"
-    "110" -> "En Route"
-    "101" -> "In Service"
-    "100" -> "Returning"
-    "011" -> "Committed"
-    "010" -> "Special"
-    "001" -> "Priority"
-    "000" -> "Emergency"
-    else  -> "Unknown"
-}
+fun micEMBitsToMessage(mbits: String): String =
+    when (mbits) {
+        "111" -> "Off Duty"
+        "110" -> "En Route"
+        "101" -> "In Service"
+        "100" -> "Returning"
+        "011" -> "Committed"
+        "010" -> "Special"
+        "001" -> "Priority"
+        "000" -> "Emergency"
+        else -> "Unknown"
+    }
 
 // ── Position resolution helper (reused from Position.kt via internal) ─────────
 
-private fun posResolutionValue(ambiguity: Int): Double = when (ambiguity) {
-    0 -> 1852.0 / 100.0
-    else -> 1852.0 / 100.0
-}
+private fun posResolutionValue(ambiguity: Int): Double =
+    when (ambiguity) {
+        0 -> 1852.0 / 100.0
+        else -> 1852.0 / 100.0
+    }

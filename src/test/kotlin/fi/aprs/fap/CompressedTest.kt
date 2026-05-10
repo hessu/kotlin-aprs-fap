@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap compressed_test.go
 
 class CompressedTest {
-
     @Test
     fun testCompressedNonMoving() {
         val header = "OH2KKU-15>APRS,TCPIP*,qAC,FOURTH"
@@ -21,11 +20,12 @@ class CompressedTest {
         assertEquals("igate testing", p.comment)
 
         assertEquals(3, p.digipeaters.size)
-        val wantDigis = listOf(
-            Digipeater("TCPIP", true),
-            Digipeater("qAC", false),
-            Digipeater("FOURTH", false),
-        )
+        val wantDigis =
+            listOf(
+                Digipeater("TCPIP", true),
+                Digipeater("qAC", false),
+                Digipeater("FOURTH", false),
+            )
         for ((i, want) in wantDigis.withIndex()) {
             assertEquals(want.call, p.digipeaters[i].call, "digi[$i].call")
             assertEquals(want.wasDigied, p.digipeaters[i].wasDigied, "digi[$i].wasDigied")
@@ -60,11 +60,12 @@ class CompressedTest {
         assertEquals(comment, p.comment)
 
         assertEquals(3, p.digipeaters.size)
-        val wantDigis = listOf(
-            Digipeater("WIDE3-2", false),
-            Digipeater("qAo", false),
-            Digipeater("OH2MQK-1", false),
-        )
+        val wantDigis =
+            listOf(
+                Digipeater("WIDE3-2", false),
+                Digipeater("qAo", false),
+                Digipeater("OH2MQK-1", false),
+            )
         for ((i, want) in wantDigis.withIndex()) {
             assertEquals(want.call, p.digipeaters[i].call, "digi[$i].call")
             assertEquals(want.wasDigied, p.digipeaters[i].wasDigied, "digi[$i].wasDigied")

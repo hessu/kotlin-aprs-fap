@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap wx_basic_test.go
 
 class WxBasicTest {
-
     @Test
     fun testWxBasic() {
         val packet = "OH2RDP-1>BEACON-15,WIDE2-1,qAo,OH2MQK-1:=6030.35N/02443.91E_150/002g004t039r001P002p004h00b10125XRSW"
@@ -104,11 +103,12 @@ class WxBasicTest {
     @Test
     fun testWxWaterLevel() {
         data class TC(val name: String, val packet: String, val want: Double?, val wantNil: Boolean = false)
-        val tests = listOf(
-            TC("positive", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033F0123", 123.0/10.0*0.3048),
-            TC("negative", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033F-042", -42.0/10.0*0.3048),
-            TC("missing",  "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033F....", null, wantNil = true),
-        )
+        val tests =
+            listOf(
+                TC("positive", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033F0123", 123.0 / 10.0 * 0.3048),
+                TC("negative", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033F-042", -42.0 / 10.0 * 0.3048),
+                TC("missing", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033F....", null, wantNil = true),
+            )
         for (tc in tests) {
             val p = parse(tc.packet)
             val wx = assertNotNull(p.wx, tc.name)
@@ -123,12 +123,13 @@ class WxBasicTest {
     @Test
     fun testWxRadiation() {
         data class TC(val name: String, val packet: String, val want: Double, val wantNil: Boolean = false)
-        val tests = listOf(
-            TC("12 microsieverts/hr", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X123", 12000.0),
-            TC("45 millisieverts/hr", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X456", 45000000.0),
-            TC("zero exponent",       "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X100", 10.0),
-            TC("missing",             "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X...", 0.0, wantNil = true),
-        )
+        val tests =
+            listOf(
+                TC("12 microsieverts/hr", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X123", 12000.0),
+                TC("45 millisieverts/hr", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X456", 45000000.0),
+                TC("zero exponent", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X100", 10.0),
+                TC("missing", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033X...", 0.0, wantNil = true),
+            )
         for (tc in tests) {
             val p = parse(tc.packet)
             val wx = assertNotNull(p.wx, tc.name)
@@ -143,10 +144,11 @@ class WxBasicTest {
     @Test
     fun testWxBatteryVoltage() {
         data class TC(val name: String, val packet: String, val want: Double, val wantNil: Boolean = false)
-        val tests = listOf(
-            TC("battery voltage", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033V128", 12.8),
-            TC("missing",         "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033V...", 0.0, wantNil = true),
-        )
+        val tests =
+            listOf(
+                TC("battery voltage", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033V128", 12.8),
+                TC("missing", "N0CALL>APRS,TCPIP*:_12032359c000s000g000t033V...", 0.0, wantNil = true),
+            )
         for (tc in tests) {
             val p = parse(tc.packet)
             val wx = assertNotNull(p.wx, tc.name)
@@ -161,11 +163,12 @@ class WxBasicTest {
     @Test
     fun testIsSoftwareID() {
         data class TC(val input: String, val want: Boolean)
-        val tests = listOf(
-            TC("XRSW", true), TC("abc", true), TC("Ab-_9", true), TC("Z1234", true),
-            TC("ab", false), TC("", false), TC("abcdef", false),
-            TC("ab c", false), TC("ab.c", false), TC("ab/c", false), TC("XR{W", false),
-        )
+        val tests =
+            listOf(
+                TC("XRSW", true), TC("abc", true), TC("Ab-_9", true), TC("Z1234", true),
+                TC("ab", false), TC("", false), TC("abcdef", false),
+                TC("ab c", false), TC("ab.c", false), TC("ab/c", false), TC("XR{W", false),
+            )
         for (tc in tests) {
             assertEquals(tc.want, isSoftwareID(tc.input), "isSoftwareID(${tc.input})")
         }

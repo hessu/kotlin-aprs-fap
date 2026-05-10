@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap utilities_test.go
 
 class UtilitiesTest {
-
     @Test
     fun testDistance() {
         val d = distance(60.17, 24.94, 61.50, 23.78)

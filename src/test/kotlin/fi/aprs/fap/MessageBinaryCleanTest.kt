@@ -8,11 +8,14 @@ private fun buildBinaryMessagePacket(content: String): Pair<String, String> {
     val destination = "OH7LZB   "
     val messageid = "42"
     val message = content.replace("{", "").replace("~", "").replace("|", "")
-    val packet = "OH7AA-1>APRS,WIDE1-1,WIDE2-2,qAo,OH7AA::${destination}:${message}{$messageid"
+    val packet = "OH7AA-1>APRS,WIDE1-1,WIDE2-2,qAo,OH7AA::$destination:$message{$messageid"
     return Pair(packet, message)
 }
 
-private fun testBinaryMessage(setName: String, content: String) {
+private fun testBinaryMessage(
+    setName: String,
+    content: String,
+) {
     val (packet, message) = buildBinaryMessagePacket(content)
     val p = parse(packet)
     assertEquals(PacketType.MESSAGE, p.type, "$setName: wrong packet type")
@@ -23,7 +26,6 @@ private fun testBinaryMessage(setName: String, content: String) {
 }
 
 class MessageBinaryCleanTest {
-
     @Test
     fun testBinaryCleanASCII() {
         val sb = StringBuilder()

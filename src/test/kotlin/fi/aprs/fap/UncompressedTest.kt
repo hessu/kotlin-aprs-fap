@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from perl-aprs-fap/t/20decode-uncompressed.t
 
 class UncompressedTest {
-
     @Test
     fun testUncompressedNortheast() {
         val packet = "OH2RDP-1>BEACON-15,OH2RDG*,WIDE:!6028.51N/02505.68E#PHG7220/RELAY,WIDE, OH2AP Jarvenpaa"

@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from perl-aprs-fap/t/54decode-tlm-mice.t
 
 class TelemetryMicETest {
-
     @Test
     fun testMicEBase91Telemetry5Ch() {
         // Sequence 00, 5 channels of telemetry and one channel of binary bits

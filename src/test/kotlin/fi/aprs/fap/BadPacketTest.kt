@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from perl-aprs-fap/t/10badpacket.t
 
 class BadPacketTest {
-
     @Test
     fun testBadPacketCorruptedPosition() {
         val packet = "OH2RDP-1>BEACON-15,OH2RDG*,WIDE:!60ff.51N/0250akh3r99hfae"

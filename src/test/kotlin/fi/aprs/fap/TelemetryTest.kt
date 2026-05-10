@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap telemetry_test.go
 
 class TelemetryTest {
-
     @Test
     fun testTelemetryClassic() {
         val p = parse("SRCCALL>APRS:T#324,000,038,255,.12,50.12,01000001")
@@ -64,19 +63,20 @@ class TelemetryTest {
     @Test
     fun testIsNumericValue() {
         data class TC(val input: String, val want: Boolean)
-        val tests = listOf(
-            TC("0", true), TC("1", true), TC("42", true), TC("123456789", true),
-            TC("-1", true), TC("-42", true),
-            TC("0.5", true), TC("3.14", true), TC(".5", true), TC(".123", true), TC("0.000001", true),
-            TC("-0.5", true), TC("-.5", true), TC("-0.0000001", true),
-            TC("123.456", true), TC("2147483647", true),
-            TC("", false), TC("-", false),
-            TC("1.", false), TC("-1.", false), TC("0.", false),
-            TC(".", false), TC("-.", false),
-            TC("abc", false), TC("1a", false), TC("a1", false), TC("-a", false),
-            TC(" 1", false), TC("1 ", false), TC(" ", false),
-            TC("1.2.3", false), TC("--1", false), TC("1-2", false),
-        )
+        val tests =
+            listOf(
+                TC("0", true), TC("1", true), TC("42", true), TC("123456789", true),
+                TC("-1", true), TC("-42", true),
+                TC("0.5", true), TC("3.14", true), TC(".5", true), TC(".123", true), TC("0.000001", true),
+                TC("-0.5", true), TC("-.5", true), TC("-0.0000001", true),
+                TC("123.456", true), TC("2147483647", true),
+                TC("", false), TC("-", false),
+                TC("1.", false), TC("-1.", false), TC("0.", false),
+                TC(".", false), TC("-.", false),
+                TC("abc", false), TC("1a", false), TC("a1", false), TC("-a", false),
+                TC(" 1", false), TC("1 ", false), TC(" ", false),
+                TC("1.2.3", false), TC("--1", false), TC("1-2", false),
+            )
         for (tc in tests) {
             assertEquals(tc.want, isNumericValue(tc.input), "isNumericValue(${tc.input})")
         }
@@ -106,13 +106,14 @@ class TelemetryTest {
     @Test
     fun testTelemetryParameterMessageTypes() {
         data class TC(val name: String, val body: String)
-        val tests = listOf(
-            TC("PARM",           "::N0CALL   :PARM.Vin,Rx1h"),
-            TC("UNIT",           "::N0CALL   :UNIT.Volt,Pkt/h"),
-            TC("EQNS",           "::N0CALL   :EQNS.0,0.075,0,0,1,0"),
-            TC("BITS",           "::N0CALL   :BITS.11111111,My station"),
-            TC("parm lowercase", "::N0CALL   :parm.Vin,Rx1h"),
-        )
+        val tests =
+            listOf(
+                TC("PARM", "::N0CALL   :PARM.Vin,Rx1h"),
+                TC("UNIT", "::N0CALL   :UNIT.Volt,Pkt/h"),
+                TC("EQNS", "::N0CALL   :EQNS.0,0.075,0,0,1,0"),
+                TC("BITS", "::N0CALL   :BITS.11111111,My station"),
+                TC("parm lowercase", "::N0CALL   :parm.Vin,Rx1h"),
+            )
         for (tc in tests) {
             val p = parse("SRCCALL>APRS${tc.body}")
             assertEquals(PacketType.TELEMETRY_MESSAGE, p.type, tc.name)

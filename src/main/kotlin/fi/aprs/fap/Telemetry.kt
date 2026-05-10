@@ -4,8 +4,10 @@ package fi.aprs.fap
 class Telemetry {
     /** Sequence number. */
     var seq: Int = 0
+
     /** Analog channel values. Null elements represent undefined channels. */
     var vals: List<Double?> = emptyList()
+
     /** Digital bits as an 8-character binary string (e.g. "10110000"), LSB first. */
     var bits: String = ""
 }

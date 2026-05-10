@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap object_test.go
 
 class ObjectTest {
-
     @Test
     fun testObjectCompressed() {
         val packet = "N0CALL-1>APRS,TCPIP*,qAC,FIRST:;SRAL HQ  *100927zS0%E/Th4_a  AKaupinmaenpolku9,open M-Th12-17,F12-14 lcl"
@@ -52,10 +51,11 @@ class ObjectTest {
     fun testObjectErrors() {
         data class TC(val name: String, val packet: String, val wantCode: String)
 
-        val tests = listOf(
-            TC("too short",                    "N0CALL-1>APRS:;SHORT",                                    ParseError.OBJ_SHORT),
-            TC("invalid alive/killed char",    "N0CALL-1>APRS:;LEADER   X092345z4903.50N/07201.75W>",     ParseError.OBJ_INV),
-        )
+        val tests =
+            listOf(
+                TC("too short", "N0CALL-1>APRS:;SHORT", ParseError.OBJ_SHORT),
+                TC("invalid alive/killed char", "N0CALL-1>APRS:;LEADER   X092345z4903.50N/07201.75W>", ParseError.OBJ_INV),
+            )
 
         for (tc in tests) {
             val ex = assertFailsWith<ParseException>(tc.name) { parse(tc.packet) }

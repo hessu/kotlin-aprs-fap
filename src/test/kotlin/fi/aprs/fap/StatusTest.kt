@@ -7,7 +7,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap status_test.go
 
 class StatusTest {
-
     @Test
     fun testParseCapabilities() {
         val p = parse("OH7LZB>APRS:<IGATE,MSG_CNT=5,LOC_CNT=10")

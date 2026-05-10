@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from go-aprs-fap dao_test.go
 
 class DaoTest {
-
     @Test
     fun testDAOUncompressedHumanReadable() {
         val p = parse("K0ELR-15>APOT02,WIDE1-1,WIDE2-1,qAo,K0ELR:/102033h4133.03NX09029.49Wv204/000!W33! 12.3V 21C/A=000665")

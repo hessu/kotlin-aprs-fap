@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from perl-aprs-fap/t/23decode-mice.t
 
 class MicETest {
-
     @Test
     fun testMicENonMoving() {
         val packet = "OH7LZB-13>SX15S6,TCPIP*,qAC,FOURTH:'I',l >/]"
@@ -86,7 +85,7 @@ class MicETest {
         assertEquals(5, vals.size)
         val expected = listOf(16.0, 32.0, 48.0, 255.0, 255.0)
         for ((i, want) in expected.withIndex()) {
-            assertEquals(want, vals[i], "${i}: ")
+            assertEquals(want, vals[i], "$i: ")
         }
     }
 
@@ -100,7 +99,7 @@ class MicETest {
         assertEquals(3, vals.size)
         val expected = listOf(16.0, 0.0, 32.0)
         for ((i, want) in expected.withIndex()) {
-            assertEquals(want, vals[i], "${i}: ")
+            assertEquals(want, vals[i], "$i: ")
         }
     }
 
@@ -124,12 +123,17 @@ class MicETest {
     fun testMicEErrors() {
         data class TC(val name: String, val packet: String, val wantCode: String)
 
-        val tests = listOf(
-            TC("destination too short",     "N0CALL>AB:`c51!f?>/",                      ParseError.MICE_INV_DSTCALL),
-            TC("info field too short",      "N0CALL>SX15S6:`short",                     ParseError.MICE_SHORT),
-            TC("invalid destination char",  "N0CALL>SX1MS6:`c51!f?>/",                  ParseError.MICE_INV_DSTCALL),
-            TC("invalid symbol table",      "OZ2BRN-4>5U2V08,OZ3RIN-3,OZ4DIA-2*,WIDE2-1,qAR,DB0KUE:`'O<l!{,,\"4R}", ParseError.SYM_INV_TABLE),
-        )
+        val tests =
+            listOf(
+                TC("destination too short", "N0CALL>AB:`c51!f?>/", ParseError.MICE_INV_DSTCALL),
+                TC("info field too short", "N0CALL>SX15S6:`short", ParseError.MICE_SHORT),
+                TC("invalid destination char", "N0CALL>SX1MS6:`c51!f?>/", ParseError.MICE_INV_DSTCALL),
+                TC(
+                    "invalid symbol table",
+                    "OZ2BRN-4>5U2V08,OZ3RIN-3,OZ4DIA-2*,WIDE2-1,qAR,DB0KUE:`'O<l!{,,\"4R}",
+                    ParseError.SYM_INV_TABLE,
+                ),
+            )
 
         for (tc in tests) {
             val ex = assertFailsWith<ParseException>(tc.name) { parse(tc.packet) }
@@ -141,24 +145,26 @@ class MicETest {
     fun testMicEMangledErrors() {
         data class TC(val name: String, val packet: String, val wantCode: String)
 
-        val tests = listOf(
-            TC("destination too short", "N0CALL>AB:`c51!f?>/",                   ParseError.MICE_SHORT),
-            TC("invalid info field",    "N0CALL>SX15S6:`c51!f?>" + "",     ParseError.MICE_INV_INFOFIELD),
-            TC("invalid dest char",     "N0CALL>SX1MS6:`@@@@ >/",                ParseError.MICE_INV_DSTCALL),
-        )
+        val tests =
+            listOf(
+                TC("destination too short", "N0CALL>AB:`c51!f?>/", ParseError.MICE_SHORT),
+                TC("invalid info field", "N0CALL>SX15S6:`c51!f?>" + "", ParseError.MICE_INV_INFOFIELD),
+                TC("invalid dest char", "N0CALL>SX1MS6:`@@@@ >/", ParseError.MICE_INV_DSTCALL),
+            )
 
         for (tc in tests) {
-            val ex = assertFailsWith<ParseException>(tc.name) {
-                parse(tc.packet, ParseOptions(acceptBrokenMicE = true))
-            }
+            val ex =
+                assertFailsWith<ParseException>(tc.name) {
+                    parse(tc.packet, ParseOptions(acceptBrokenMicE = true))
+                }
             assertEquals(tc.wantCode, ex.code, tc.name)
         }
     }
 
     @Test
     fun testMicEMBitsToMessage() {
-        assertEquals("Off Duty",  micEMBitsToMessage("111"))
-        assertEquals("En Route",  micEMBitsToMessage("110"))
+        assertEquals("Off Duty", micEMBitsToMessage("111"))
+        assertEquals("En Route", micEMBitsToMessage("110"))
         assertEquals("Emergency", micEMBitsToMessage("000"))
     }
 }

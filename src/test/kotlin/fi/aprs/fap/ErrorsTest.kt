@@ -3,7 +3,6 @@ package fi.aprs.fap
 import kotlin.test.*
 
 class ErrorsTest {
-
     @Test
     fun testParseExceptionCode() {
         val ex = ParseException("test_code", "test message")

@@ -7,7 +7,6 @@ import kotlin.test.*
 private val testMessageIDs = listOf("1", "42", "10512", "a", "1Ff84", "F00b4")
 
 class MessageTest {
-
     @Test
     fun testMessageNormal() {
         for (msgid in testMessageIDs) {
@@ -88,7 +87,12 @@ class MessageTest {
     @Test
     fun testEncodeMessageNormal() {
         for (msgid in testMessageIDs) {
-            val msg = Message().also { it.destination = "N0CALL"; it.text = "Testing, 1 2 3"; it.id = msgid }
+            val msg =
+                Message().also {
+                    it.destination = "N0CALL"
+                    it.text = "Testing, 1 2 3"
+                    it.id = msgid
+                }
             val body = encodeMessage(msg)
             val packet = "OH7AA-1>APRS::${body.substring(1)}"
             val p = parse(packet)
@@ -103,7 +107,11 @@ class MessageTest {
     @Test
     fun testEncodeMessageAck() {
         for (msgid in testMessageIDs) {
-            val msg = Message().also { it.destination = "N0CALL"; it.ackId = msgid }
+            val msg =
+                Message().also {
+                    it.destination = "N0CALL"
+                    it.ackId = msgid
+                }
             val body = encodeMessage(msg)
             val packet = "OH7AA-1>APRS::${body.substring(1)}"
             val p = parse(packet)
@@ -116,7 +124,11 @@ class MessageTest {
     @Test
     fun testEncodeMessageReject() {
         for (msgid in testMessageIDs) {
-            val msg = Message().also { it.destination = "N0CALL"; it.rejId = msgid }
+            val msg =
+                Message().also {
+                    it.destination = "N0CALL"
+                    it.rejId = msgid
+                }
             val body = encodeMessage(msg)
             val packet = "OH7AA-1>APRS::${body.substring(1)}"
             val p = parse(packet)
@@ -131,7 +143,13 @@ class MessageTest {
         data class TC(val id: String, val ackId: String)
         val tests = listOf(TC("1", "abc"), TC("42", "ab"), TC("ab", "cd"), TC("abc", "d"))
         for (tc in tests) {
-            val msg = Message().also { it.destination = "N0CALL"; it.text = "Testing, 1 2 3"; it.id = tc.id; it.ackId = tc.ackId }
+            val msg =
+                Message().also {
+                    it.destination = "N0CALL"
+                    it.text = "Testing, 1 2 3"
+                    it.id = tc.id
+                    it.ackId = tc.ackId
+                }
             val body = encodeMessage(msg)
             val packet = "OH7AA-1>APRS::${body.substring(1)}"
             val p = parse(packet)
@@ -145,7 +163,11 @@ class MessageTest {
 
     @Test
     fun testEncodeMessageNoID() {
-        val msg = Message().also { it.destination = "N0CALL"; it.text = "Hello world" }
+        val msg =
+            Message().also {
+                it.destination = "N0CALL"
+                it.text = "Hello world"
+            }
         val body = encodeMessage(msg)
         val packet = "OH7AA-1>APRS::${body.substring(1)}"
         val p = parse(packet)
@@ -159,21 +181,115 @@ class MessageTest {
     fun testEncodeMessageErrors() {
         data class TC(val name: String, val msg: Message, val wantCode: String)
 
-        val tests = listOf(
-            TC("empty destination",      Message().also { it.text = "hello" },                                                  ParseError.MSG_NO_DST),
-            TC("destination too long",   Message().also { it.destination = "0123456789"; it.text = "hello" },                   ParseError.MSG_DST_LONG),
-            TC("message ID too long",    Message().also { it.destination = "N0CALL"; it.text = "hello"; it.id = "123456" },     ParseError.MSG_ID_INV),
-            TC("message ID with space",  Message().also { it.destination = "N0CALL"; it.text = "hello"; it.id = "1 2" },        ParseError.MSG_ID_INV),
-            TC("message ID special char",Message().also { it.destination = "N0CALL"; it.text = "hello"; it.id = "ab!c" },       ParseError.MSG_ID_INV),
-            TC("reply-ack too long",     Message().also { it.destination = "N0CALL"; it.text = "hello"; it.id = "abc"; it.ackId = "de" }, ParseError.MSG_REPLYACK),
-            TC("reply-ack just over",    Message().also { it.destination = "N0CALL"; it.text = "hello"; it.id = "ab"; it.ackId = "cde" }, ParseError.MSG_REPLYACK),
-            TC("both ack and reject",    Message().also { it.destination = "N0CALL"; it.ackId = "1"; it.rejId = "2" },          ParseError.MSG_ACK_REJ),
-            TC("content with reject",    Message().also { it.destination = "N0CALL"; it.text = "hello"; it.rejId = "1" },       ParseError.MSG_ACK_REJ),
-            TC("LF in text",             Message().also { it.destination = "N0CALL"; it.text = "hello\nworld" },                ParseError.MSG_CR),
-            TC("CR in text",             Message().also { it.destination = "N0CALL"; it.text = "hello\rworld" },                ParseError.MSG_CR),
-            TC("LF in destination",      Message().also { it.destination = "N0\nCALL"; it.text = "hello" },                     ParseError.MSG_CR),
-            TC("CR in ack ID",           Message().also { it.destination = "N0CALL"; it.ackId = "1\r" },                        ParseError.MSG_CR),
-        )
+        val tests =
+            listOf(
+                TC("empty destination", Message().also { it.text = "hello" }, ParseError.MSG_NO_DST),
+                TC(
+                    "destination too long",
+                    Message().also {
+                        it.destination = "0123456789"
+                        it.text = "hello"
+                    },
+                    ParseError.MSG_DST_LONG,
+                ),
+                TC(
+                    "message ID too long",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello"
+                        it.id = "123456"
+                    },
+                    ParseError.MSG_ID_INV,
+                ),
+                TC(
+                    "message ID with space",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello"
+                        it.id = "1 2"
+                    },
+                    ParseError.MSG_ID_INV,
+                ),
+                TC(
+                    "message ID special char",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello"
+                        it.id = "ab!c"
+                    },
+                    ParseError.MSG_ID_INV,
+                ),
+                TC(
+                    "reply-ack too long",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello"
+                        it.id = "abc"
+                        it.ackId = "de"
+                    },
+                    ParseError.MSG_REPLYACK,
+                ),
+                TC(
+                    "reply-ack just over",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello"
+                        it.id = "ab"
+                        it.ackId = "cde"
+                    },
+                    ParseError.MSG_REPLYACK,
+                ),
+                TC(
+                    "both ack and reject",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.ackId = "1"
+                        it.rejId = "2"
+                    },
+                    ParseError.MSG_ACK_REJ,
+                ),
+                TC(
+                    "content with reject",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello"
+                        it.rejId = "1"
+                    },
+                    ParseError.MSG_ACK_REJ,
+                ),
+                TC(
+                    "LF in text",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello\nworld"
+                    },
+                    ParseError.MSG_CR,
+                ),
+                TC(
+                    "CR in text",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.text = "hello\rworld"
+                    },
+                    ParseError.MSG_CR,
+                ),
+                TC(
+                    "LF in destination",
+                    Message().also {
+                        it.destination = "N0\nCALL"
+                        it.text = "hello"
+                    },
+                    ParseError.MSG_CR,
+                ),
+                TC(
+                    "CR in ack ID",
+                    Message().also {
+                        it.destination = "N0CALL"
+                        it.ackId = "1\r"
+                    },
+                    ParseError.MSG_CR,
+                ),
+            )
 
         for (tc in tests) {
             val ex = assertFailsWith<ParseException>(tc.name) { encodeMessage(tc.msg) }
@@ -185,10 +301,11 @@ class MessageTest {
     fun testMessageErrors() {
         data class TC(val name: String, val packet: String, val wantCode: String)
 
-        val tests = listOf(
-            TC("too short",                    "OH7AA-1>APRS::N0CALL  ",           ParseError.MSG_SHORT),
-            TC("missing colon after addressee","OH7AA-1>APRS::N0CALL  XHello world", ParseError.MSG_INV),
-        )
+        val tests =
+            listOf(
+                TC("too short", "OH7AA-1>APRS::N0CALL  ", ParseError.MSG_SHORT),
+                TC("missing colon after addressee", "OH7AA-1>APRS::N0CALL  XHello world", ParseError.MSG_INV),
+            )
 
         for (tc in tests) {
             val ex = assertFailsWith<ParseException>(tc.name) { parse(tc.packet) }

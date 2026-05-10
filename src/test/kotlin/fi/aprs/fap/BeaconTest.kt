@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from perl-aprs-fap/t/52decode-beacon.t
 
 class BeaconTest {
-
     @Test
     fun testBeaconNonAPRS() {
         val p = parse("OH2RDU>UIDIGI: UIDIGI 1.9")

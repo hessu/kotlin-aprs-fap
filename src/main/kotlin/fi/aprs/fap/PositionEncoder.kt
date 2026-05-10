@@ -93,53 +93,57 @@ fun encodePosition(
     latString += if (lat >= 0) "N" else "S"
     lonString += if (lon >= 0) "E" else "W"
 
-    val result = buildString {
-        val ts = o.timestamp
-        if (ts != null) {
-            val zdt = ZonedDateTime.ofInstant(ts, ZoneOffset.UTC)
-            val dtid = if (o.messagingCapable) '@' else '/'
-            append("%c%02d%02d%02dh".format(dtid, zdt.hour, zdt.minute, zdt.second))
-        } else {
-            append(if (o.messagingCapable) '=' else '!')
-        }
-        append(latString)
-        append(symbolTable)
-        append(lonString)
-        append(symbolCode)
-
-        if (speed != null && course != null && speed >= 0 && course >= 0) {
-            val speedKnots = minOf(speed / 1.852, 999.0)
-            val c = if (course > 360) 0.0 else course
-            append("%03.0f/%03.0f".format(c, speedKnots))
-        }
-
-        if (altitude != null) {
-            val altFeet = altitude / 0.3048
-            if (altFeet >= 0) {
-                append("/A=%06.0f".format(altFeet))
+    val result =
+        buildString {
+            val ts = o.timestamp
+            if (ts != null) {
+                val zdt = ZonedDateTime.ofInstant(ts, ZoneOffset.UTC)
+                val dtid = if (o.messagingCapable) '@' else '/'
+                append("%c%02d%02d%02dh".format(dtid, zdt.hour, zdt.minute, zdt.second))
             } else {
-                append("/A=-%05.0f".format(-altFeet))
+                append(if (o.messagingCapable) '=' else '!')
+            }
+            append(latString)
+            append(symbolTable)
+            append(lonString)
+            append(symbolCode)
+
+            if (speed != null && course != null && speed >= 0 && course >= 0) {
+                val speedKnots = minOf(speed / 1.852, 999.0)
+                val c = if (course > 360) 0.0 else course
+                append("%03.0f/%03.0f".format(c, speedKnots))
+            }
+
+            if (altitude != null) {
+                val altFeet = altitude / 0.3048
+                if (altFeet >= 0) {
+                    append("/A=%06.0f".format(altFeet))
+                } else {
+                    append("/A=-%05.0f".format(-altFeet))
+                }
+            }
+
+            if (o.comment.isNotEmpty()) append(o.comment)
+
+            if (o.dao && latMinDAO.isNotEmpty() && lonMinDAO.isNotEmpty()) {
+                val latDAO = latMinDAO.toInt()
+                val lonDAO = lonMinDAO.toInt()
+                val latChar = (latDAO / 1.1 + 0.5).toInt() + 33
+                val lonChar = (lonDAO / 1.1 + 0.5).toInt() + 33
+                append("!w")
+                append(latChar.toChar())
+                append(lonChar.toChar())
+                append('!')
             }
         }
-
-        if (o.comment.isNotEmpty()) append(o.comment)
-
-        if (o.dao && latMinDAO.isNotEmpty() && lonMinDAO.isNotEmpty()) {
-            val latDAO = latMinDAO.toInt()
-            val lonDAO = lonMinDAO.toInt()
-            val latChar = (latDAO / 1.1 + 0.5).toInt() + 33
-            val lonChar = (lonDAO / 1.1 + 0.5).toInt() + 33
-            append("!w")
-            append(latChar.toChar())
-            append(lonChar.toChar())
-            append('!')
-        }
-    }
 
     return result
 }
 
-private fun formatMinutes(min: Double, dao: Boolean): Pair<String, String> {
+private fun formatMinutes(
+    min: Double,
+    dao: Boolean,
+): Pair<String, String> {
     val minS: String
     var daoS = ""
     if (dao) {
@@ -154,5 +158,4 @@ private fun formatMinutes(min: Double, dao: Boolean): Pair<String, String> {
     return Pair(minS, daoS)
 }
 
-private fun isValidEncSymbolTable(c: Char): Boolean =
-    c == '/' || c == '\\' || c in 'A'..'Z' || c in '0'..'9'
+private fun isValidEncSymbolTable(c: Char): Boolean = c == '/' || c == '\\' || c in 'A'..'Z' || c in '0'..'9'

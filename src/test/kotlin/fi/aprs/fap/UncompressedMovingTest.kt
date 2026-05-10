@@ -5,7 +5,6 @@ import kotlin.test.*
 // Tests ported from perl-aprs-fap/t/21decode-uncomp-moving.t
 
 class UncompressedMovingTest {
-
     @Test
     fun testUncompressedMoving() {
         val header = "OH7FDN>APZMDR,OH7AA-1*,WIDE2-1,qAR,OH7AA"
@@ -21,12 +20,13 @@ class UncompressedMovingTest {
         assertEquals(PacketType.LOCATION, p.type)
 
         assertEquals(4, p.digipeaters.size)
-        val expectedDigis = listOf(
-            "OH7AA-1" to true,
-            "WIDE2-1" to false,
-            "qAR" to false,
-            "OH7AA" to false,
-        )
+        val expectedDigis =
+            listOf(
+                "OH7AA-1" to true,
+                "WIDE2-1" to false,
+                "qAR" to false,
+                "OH7AA" to false,
+            )
         for ((i, want) in expectedDigis.withIndex()) {
             assertEquals(want.first, p.digipeaters[i].call, "digi[$i].call")
             assertEquals(want.second, p.digipeaters[i].wasDigied, "digi[$i].wasDigied")

@@ -41,7 +41,14 @@ class AprsIsConnection(
  * Connects to an APRS-IS server at [addr] (host:port), sends the login line,
  * and waits for a `# logresp` reply. An optional [filter] string can be provided.
  */
-fun dial(addr: String, callsign: String, passcode: String, appName: String, appVer: String, filter: String = ""): AprsIsConnection {
+fun dial(
+    addr: String,
+    callsign: String,
+    passcode: String,
+    appName: String,
+    appVer: String,
+    filter: String = "",
+): AprsIsConnection {
     val colonIdx = addr.lastIndexOf(':')
     val host = if (colonIdx >= 0) addr.substring(0, colonIdx) else addr
     val port = if (colonIdx >= 0) addr.substring(colonIdx + 1).toInt() else 10152
@@ -60,12 +67,13 @@ fun dial(addr: String, callsign: String, passcode: String, appName: String, appV
     val deadline = Instant.now().plus(Duration.ofSeconds(5))
     while (Instant.now().isBefore(deadline)) {
         val remaining = Duration.between(Instant.now(), deadline)
-        val line = try {
-            conn.readLine(remaining)
-        } catch (e: Exception) {
-            socket.close()
-            throw Exception("failed to read login response: ${e.message}", e)
-        }
+        val line =
+            try {
+                conn.readLine(remaining)
+            } catch (e: Exception) {
+                socket.close()
+                throw Exception("failed to read login response: ${e.message}", e)
+            }
         if (line.startsWith("# logresp")) return conn
     }
 

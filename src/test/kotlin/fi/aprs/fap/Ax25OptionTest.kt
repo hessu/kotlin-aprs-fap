@@ -3,7 +3,6 @@ package fi.aprs.fap
 import kotlin.test.*
 
 class Ax25OptionTest {
-
     @Test
     fun testWithAX25() {
         data class TC(
@@ -18,79 +17,80 @@ class Ax25OptionTest {
 
         val ax25 = ParseOptions(isAX25 = true)
 
-        val tests = listOf(
-            TC(
-                name = "valid AX.25 packet",
-                packet = "OH7LZB-9>APX200,OH7AA-1*,WIDE2-1:!6028.51N/02505.68E#PHG7220/RELAY,WIDE, OH7LZB testing",
-                wantSrc = "OH7LZB-9",
-                wantDst = "APX200",
-                wantDigis = listOf("OH7AA-1", "WIDE2-1"),
-            ),
-            TC(
-                name = "valid AX.25 no digipeaters",
-                packet = "OH7LZB>APRS:>status",
-                wantSrc = "OH7LZB",
-                wantDst = "APRS",
-                wantDigis = emptyList(),
-            ),
-            TC(
-                name = "invalid AX.25 source callsign",
-                packet = "TOOLONGCALLSIGN>APRS:>status",
-                wantErr = true,
-                wantCode = ParseError.SRCCALL_NOAX25,
-            ),
-            TC(
-                name = "source SSID too large for AX.25",
-                packet = "OH7LZB-16>APRS:>status",
-                wantErr = true,
-                wantCode = ParseError.SRCCALL_NOAX25,
-            ),
-            TC(
-                name = "invalid AX.25 digipeater callsign",
-                packet = "OH7LZB>APRS,TOOLONGCALLSIGN:>status",
-                wantErr = true,
-                wantCode = ParseError.DIGICALL_NOAX25,
-            ),
-            TC(
-                name = "too many path components for AX.25",
-                packet = "OH7LZB>APRS,D1,D2,D3,D4,D5,D6,D7,D8,D9:>status",
-                wantErr = true,
-                wantCode = ParseError.DSTPATH_TOOMANY,
-            ),
-            TC(
-                name = "max 8 digipeaters is valid",
-                packet = "OH7LZB>APRS,D1,D2,D3,D4,D5,D6,D7,D8:>status",
-                wantSrc = "OH7LZB",
-                wantDst = "APRS",
-                wantDigis = listOf("D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"),
-            ),
-            TC(
-                name = "source callsign normalized to uppercase",
-                packet = "oh7lzb>APRS:>status",
-                wantSrc = "OH7LZB",
-                wantDst = "APRS",
-                wantDigis = emptyList(),
-            ),
-            TC(
-                name = "invalid AX.25 destination callsign",
-                packet = "OH7LZB>TOOLONGDST:>status",
-                wantErr = true,
-                wantCode = ParseError.DSTCALL_NOAX25,
-            ),
-            TC(
-                name = "destination SSID too large for AX.25",
-                packet = "OH7LZB>APRS-16:>status",
-                wantErr = true,
-                wantCode = ParseError.DSTCALL_NOAX25,
-            ),
-            TC(
-                name = "destination callsign normalized to uppercase",
-                packet = "OH7LZB>aprs:>status",
-                wantSrc = "OH7LZB",
-                wantDst = "APRS",
-                wantDigis = emptyList(),
-            ),
-        )
+        val tests =
+            listOf(
+                TC(
+                    name = "valid AX.25 packet",
+                    packet = "OH7LZB-9>APX200,OH7AA-1*,WIDE2-1:!6028.51N/02505.68E#PHG7220/RELAY,WIDE, OH7LZB testing",
+                    wantSrc = "OH7LZB-9",
+                    wantDst = "APX200",
+                    wantDigis = listOf("OH7AA-1", "WIDE2-1"),
+                ),
+                TC(
+                    name = "valid AX.25 no digipeaters",
+                    packet = "OH7LZB>APRS:>status",
+                    wantSrc = "OH7LZB",
+                    wantDst = "APRS",
+                    wantDigis = emptyList(),
+                ),
+                TC(
+                    name = "invalid AX.25 source callsign",
+                    packet = "TOOLONGCALLSIGN>APRS:>status",
+                    wantErr = true,
+                    wantCode = ParseError.SRCCALL_NOAX25,
+                ),
+                TC(
+                    name = "source SSID too large for AX.25",
+                    packet = "OH7LZB-16>APRS:>status",
+                    wantErr = true,
+                    wantCode = ParseError.SRCCALL_NOAX25,
+                ),
+                TC(
+                    name = "invalid AX.25 digipeater callsign",
+                    packet = "OH7LZB>APRS,TOOLONGCALLSIGN:>status",
+                    wantErr = true,
+                    wantCode = ParseError.DIGICALL_NOAX25,
+                ),
+                TC(
+                    name = "too many path components for AX.25",
+                    packet = "OH7LZB>APRS,D1,D2,D3,D4,D5,D6,D7,D8,D9:>status",
+                    wantErr = true,
+                    wantCode = ParseError.DSTPATH_TOOMANY,
+                ),
+                TC(
+                    name = "max 8 digipeaters is valid",
+                    packet = "OH7LZB>APRS,D1,D2,D3,D4,D5,D6,D7,D8:>status",
+                    wantSrc = "OH7LZB",
+                    wantDst = "APRS",
+                    wantDigis = listOf("D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8"),
+                ),
+                TC(
+                    name = "source callsign normalized to uppercase",
+                    packet = "oh7lzb>APRS:>status",
+                    wantSrc = "OH7LZB",
+                    wantDst = "APRS",
+                    wantDigis = emptyList(),
+                ),
+                TC(
+                    name = "invalid AX.25 destination callsign",
+                    packet = "OH7LZB>TOOLONGDST:>status",
+                    wantErr = true,
+                    wantCode = ParseError.DSTCALL_NOAX25,
+                ),
+                TC(
+                    name = "destination SSID too large for AX.25",
+                    packet = "OH7LZB>APRS-16:>status",
+                    wantErr = true,
+                    wantCode = ParseError.DSTCALL_NOAX25,
+                ),
+                TC(
+                    name = "destination callsign normalized to uppercase",
+                    packet = "OH7LZB>aprs:>status",
+                    wantSrc = "OH7LZB",
+                    wantDst = "APRS",
+                    wantDigis = emptyList(),
+                ),
+            )
 
         for (tc in tests) {
             if (tc.wantErr) {

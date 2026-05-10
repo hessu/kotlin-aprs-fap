@@ -4,12 +4,16 @@ package fi.aprs.fap
 class Message {
     /** Destination callsign (addressee). */
     var destination: String = ""
+
     /** Message text body. */
     var text: String = ""
+
     /** Message ID (1–5 alphanumeric characters). */
     var id: String = ""
+
     /** Acknowledgment message ID. */
     var ackId: String = ""
+
     /** Reject message ID. */
     var rejId: String = ""
 }
@@ -87,7 +91,8 @@ fun encodeMessage(msg: Message): String {
         throw ParseException(ParseError.MSG_ACK_REJ, "message cannot have both content and reject")
     }
     if (containsCRLF(msg.destination) || containsCRLF(msg.text) ||
-        containsCRLF(msg.id) || containsCRLF(msg.ackId) || containsCRLF(msg.rejId)) {
+        containsCRLF(msg.id) || containsCRLF(msg.ackId) || containsCRLF(msg.rejId)
+    ) {
         throw ParseException(ParseError.MSG_CR, "message fields must not contain CR or LF")
     }
     if (msg.id.isNotEmpty() && !isValidMsgID(msg.id)) {
@@ -96,24 +101,25 @@ fun encodeMessage(msg: Message): String {
 
     val addressee = msg.destination + " ".repeat(9 - msg.destination.length)
 
-    val content = when {
-        msg.ackId.isNotEmpty() && msg.id.isEmpty() -> "ack" + msg.ackId
-        msg.rejId.isNotEmpty() -> "rej" + msg.rejId
-        else -> {
-            var c = msg.text
-            if (msg.id.isNotEmpty()) {
-                if (msg.ackId.isNotEmpty()) {
-                    if (msg.id.length + 1 + msg.ackId.length > 5) {
-                        throw ParseException(ParseError.MSG_REPLYACK, "reply-ack too long to embed, send ack separately")
+    val content =
+        when {
+            msg.ackId.isNotEmpty() && msg.id.isEmpty() -> "ack" + msg.ackId
+            msg.rejId.isNotEmpty() -> "rej" + msg.rejId
+            else -> {
+                var c = msg.text
+                if (msg.id.isNotEmpty()) {
+                    if (msg.ackId.isNotEmpty()) {
+                        if (msg.id.length + 1 + msg.ackId.length > 5) {
+                            throw ParseException(ParseError.MSG_REPLYACK, "reply-ack too long to embed, send ack separately")
+                        }
+                        c += "{" + msg.id + "}" + msg.ackId
+                    } else {
+                        c += "{" + msg.id
                     }
-                    c += "{" + msg.id + "}" + msg.ackId
-                } else {
-                    c += "{" + msg.id
                 }
+                c
             }
-            c
         }
-    }
 
     return ":$addressee:$content"
 }
