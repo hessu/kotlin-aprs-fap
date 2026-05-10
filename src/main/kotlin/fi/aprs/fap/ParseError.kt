@@ -4,8 +4,15 @@ package fi.aprs.fap
  * Thrown on hard parse failures. [code] is a machine-readable error code
  * (e.g. "pos_short") matching the Go sentinel error codes. Use the constants
  * on [ParseError] for reliable comparisons.
+ *
+ * [packet] carries the partially-parsed packet at the point of failure, so
+ * callers can inspect fields that were successfully decoded before the error.
  */
-class ParseException(val code: String, message: String) : Exception(message)
+class ParseException(
+    val code: String,
+    message: String,
+    val packet: Packet? = null,
+) : Exception(message)
 
 /** Non-fatal parsing issue collected in [Packet.warnings]. */
 data class ParseWarning(val code: String, val message: String)
