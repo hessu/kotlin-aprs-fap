@@ -203,14 +203,6 @@ fun Packet.isBeacon(): Boolean = dstCallsign in beaconDestinations
 
 // ── Stubs for packet types not yet implemented ────────────────────────────────
 
-internal fun Packet.parseMessage(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "message not yet implemented")
-}
-
-internal fun Packet.parseItem(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "item not yet implemented")
-}
-
 internal fun Packet.parseWeatherPositionless(options: ParseOptions) {
     fail(ParseError.TYPE_NOT_SUPPORTED, "positionless weather not yet implemented")
 }
