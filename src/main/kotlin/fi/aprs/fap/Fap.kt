@@ -201,28 +201,6 @@ private val beaconDestinations = setOf("ID", "BEACON", "UIDIGI", "CQ")
 
 fun Packet.isBeacon(): Boolean = dstCallsign in beaconDestinations
 
-// ── Stubs for packet types not yet implemented ────────────────────────────────
-
-internal fun Packet.parseWeatherPositionless(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "positionless weather not yet implemented")
-}
-
-internal fun Packet.parseULTW(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "ULTW weather not yet implemented")
-}
-
-internal fun Packet.parseULTWLogging(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "ULTW logging not yet implemented")
-}
-
-internal fun Packet.parseNMEA(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "NMEA not yet implemented")
-}
-
-internal fun Packet.parseTelemetry(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "telemetry not yet implemented")
-}
-
 // ── Callsign validation helpers ───────────────────────────────────────────────
 
 private fun isAlnumDash(s: String, maxLen: Int): Boolean {

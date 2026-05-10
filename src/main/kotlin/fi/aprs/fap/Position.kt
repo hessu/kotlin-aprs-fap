@@ -156,7 +156,10 @@ internal fun Packet.parseCompressedPosition(bodyStr: String, options: ParseOptio
 
         if (symbolCode == '_') {
             type = PacketType.WX
-            // Weather parsing from comment is handled when wx module is implemented
+            val wxData = Weather()
+            wx = wxData
+            val wxComment = parseWeatherFromComment(comment, wxData)
+            if (wxData.hasData() && wxComment.isNotEmpty()) this.comment = wxComment
             return
         }
 
@@ -196,7 +199,10 @@ internal fun Packet.parsePositionFallback(options: ParseOptions) {
 internal fun Packet.parsePositionComment(comment: String) {
     if (symbolCode == '_') {
         type = PacketType.WX
-        // Full weather parsing from comment handled when wx module is implemented
+        val wxData = Weather()
+        wx = wxData
+        val wxComment = parseWeatherFromComment(comment, wxData)
+        if (wxData.hasData() && wxComment.isNotEmpty()) this.comment = wxComment
         return
     }
 
