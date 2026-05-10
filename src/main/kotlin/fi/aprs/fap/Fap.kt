@@ -143,7 +143,21 @@ internal fun Packet.parseBody(options: ParseOptions) {
         }
         '=' -> parsePositionNoTimestamp(options, typeChar)
         '/', '@' -> parsePositionWithTimestamp(options, typeChar)
-        '\'', '`' -> parseMicE(options)
+        '\'', '`' -> {
+            try {
+                parseMicE(options)
+            } catch (e: ParseException) {
+                if (options.acceptBrokenMicE) {
+                    speed = null
+                    course = null
+                    altitude = null
+                    comment = ""
+                    parseMicEMangled(options)
+                } else {
+                    throw e
+                }
+            }
+        }
         ':' -> parseMessage(options)
         ';' -> parseObject(options)
         ')' -> parseItem(options)
@@ -188,10 +202,6 @@ private val beaconDestinations = setOf("ID", "BEACON", "UIDIGI", "CQ")
 fun Packet.isBeacon(): Boolean = dstCallsign in beaconDestinations
 
 // ── Stubs for packet types not yet implemented ────────────────────────────────
-
-internal fun Packet.parseMicE(options: ParseOptions) {
-    fail(ParseError.TYPE_NOT_SUPPORTED, "Mic-E not yet implemented")
-}
 
 internal fun Packet.parseMessage(options: ParseOptions) {
     fail(ParseError.TYPE_NOT_SUPPORTED, "message not yet implemented")
