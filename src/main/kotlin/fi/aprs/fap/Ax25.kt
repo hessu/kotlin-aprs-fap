@@ -117,11 +117,18 @@ fun parseAx25(
         throw Ax25DecodeException("Not a UI frame: ctrl=0x${ctrl.toString(16).padStart(2, '0')}")
     }
 
+    // APRS info fields are single-line: CR/LF terminate the packet. Truncate
+    // at the first CR or LF so downstream parsers (and toMonitorLine) never
+    // see stray bytes some senders append to the AX.25 info field.
+    val rawBody = frame.sliceArray(offset until frame.size)
+    val terminatorIdx = rawBody.indexOfFirst { it == 0x0D.toByte() || it == 0x0A.toByte() }
+    val body = if (terminatorIdx >= 0) rawBody.sliceArray(0 until terminatorIdx) else rawBody
+
     val ax25Frame = Ax25Frame(
         srcCall = src.callString,
         dstCall = dst.callString,
         digipeaters = digipeaters,
-        body = frame.sliceArray(offset until frame.size),
+        body = body,
     )
 
     val monitorLine = ax25Frame.toMonitorLine()
