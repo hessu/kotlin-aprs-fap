@@ -162,6 +162,35 @@ class MicETest {
     }
 
     @Test
+    fun testMicEMessagingFromCurrentTNCPrefix() {
+        // info[8] = '`' → messaging-capable. The body's 8-byte Mic-E
+        // header is `c51!f?>/` (6 lat/lon bytes + symbol code + table);
+        // info[8] is then the messaging-prefix indicator. The body's
+        // outer data-type identifier (body[0]) is irrelevant to this
+        // assertion — what matters is the byte at the start of the
+        // comment area.
+        val packet = "OH7LZB-2>TQ4W2V,WIDE2-1,qAo,OH7LZB:`c51!f?>/`hello world"
+        val p = parse(packet)
+        assertEquals(Format.MICE, p.format)
+        assertEquals(true, p.messaging)
+        // The leading byte is left in the comment for downstream
+        // consumers (e.g. kotlin-aprs-deviceid) to strip.
+        assertEquals("`hello world", p.comment)
+    }
+
+    @Test
+    fun testMicEMessagingFromOldTNCPrefix() {
+        // info[8] = "'" → old TNC, not messaging-capable. Length keeps
+        // parseMicETelemetry's hex check from triggering (the chars
+        // after "'" are not hex), so the leading byte survives.
+        val packet = "OH7LZB-2>TQ4W2V,WIDE2-1,qAo,OH7LZB:`c51!f?>/'no msg"
+        val p = parse(packet)
+        assertEquals(Format.MICE, p.format)
+        assertEquals(false, p.messaging)
+        assertEquals("'no msg", p.comment)
+    }
+
+    @Test
     fun testMicEMBitsToMessage() {
         assertEquals("Off Duty", micEMBitsToMessage("111"))
         assertEquals("En Route", micEMBitsToMessage("110"))

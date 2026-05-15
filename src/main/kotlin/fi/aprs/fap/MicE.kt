@@ -88,6 +88,20 @@ internal fun Packet.parseMicE(options: ParseOptions) {
 
     var comment = if (info.size > 8) info.copyOfRange(8, info.size).toString(Charsets.ISO_8859_1) else ""
 
+    // The first byte of the comment area is the Mic-E messaging-prefix
+    // indicator. Set the messaging flag based on it; the byte itself is
+    // left in place — downstream consumers (e.g. kotlin-aprs-deviceid)
+    // strip it from the comment, since the messaging-capable state is
+    // now exposed here on Packet.messaging.
+    //   '`' (0x60) → current TNC, messaging-capable
+    //   "'" (0x27) → old TNC, not messaging-capable
+    if (comment.isNotEmpty()) {
+        when (comment[0]) {
+            '`' -> messaging = true
+            '\'' -> messaging = false
+        }
+    }
+
     comment = parseMicEBase91Telemetry(comment)
 
     // Altitude: 3 base-91 chars followed by '}'
@@ -175,6 +189,14 @@ internal fun Packet.parseMicEMangled(options: ParseOptions) {
     symbolTable = info[7].toInt().and(0xFF).toChar()
 
     comment = if (info.size > 8) info.copyOfRange(8, info.size).toString(Charsets.ISO_8859_1) else ""
+
+    // See main parser: set messaging flag from the comment's leading byte.
+    if (comment.isNotEmpty()) {
+        when (comment[0]) {
+            '`' -> messaging = true
+            '\'' -> messaging = false
+        }
+    }
 }
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
