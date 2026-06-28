@@ -3,7 +3,6 @@ package fi.aprs.fap
 import kotlin.test.*
 
 class Ax25Test {
-
     // ── encodeAx25Ui ─────────────────────────────────────────────────────────
 
     @Test

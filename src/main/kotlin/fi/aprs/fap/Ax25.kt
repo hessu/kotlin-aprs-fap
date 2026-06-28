@@ -28,16 +28,17 @@ data class Ax25Frame(
      */
     fun toMonitorLine(): String = buildHeader() + ":" + body.toString(Charsets.ISO_8859_1)
 
-    internal fun buildHeader(): String = buildString {
-        append(srcCall)
-        append('>')
-        append(dstCall)
-        for (digi in digipeaters) {
-            append(',')
-            append(digi.call)
-            if (digi.wasDigied) append('*')
+    internal fun buildHeader(): String =
+        buildString {
+            append(srcCall)
+            append('>')
+            append(dstCall)
+            for (digi in digipeaters) {
+                append(',')
+                append(digi.call)
+                if (digi.wasDigied) append('*')
+            }
         }
-    }
 
     // ByteArray does not implement structural equals/hashCode, so we do it manually.
     override fun equals(other: Any?): Boolean {
@@ -124,12 +125,13 @@ fun parseAx25(
     val terminatorIdx = rawBody.indexOfFirst { it == 0x0D.toByte() || it == 0x0A.toByte() }
     val body = if (terminatorIdx >= 0) rawBody.sliceArray(0 until terminatorIdx) else rawBody
 
-    val ax25Frame = Ax25Frame(
-        srcCall = src.callString,
-        dstCall = dst.callString,
-        digipeaters = digipeaters,
-        body = body,
-    )
+    val ax25Frame =
+        Ax25Frame(
+            srcCall = src.callString,
+            dstCall = dst.callString,
+            digipeaters = digipeaters,
+            body = body,
+        )
 
     val monitorLine = ax25Frame.toMonitorLine()
 
@@ -165,13 +167,16 @@ fun encodeAx25Ui(
     digipeaters: List<String>,
     body: ByteArray,
 ): ByteArray {
-    val validSrc = checkAX25Call(srcCall)
-        ?: throw IllegalArgumentException("Invalid AX.25 source callsign: $srcCall")
-    val validDst = checkAX25Call(dstCall)
-        ?: throw IllegalArgumentException("Invalid AX.25 destination callsign: $dstCall")
-    val validDigis = digipeaters.map { d ->
-        checkAX25Call(d) ?: throw IllegalArgumentException("Invalid AX.25 digipeater callsign: $d")
-    }
+    val validSrc =
+        checkAX25Call(srcCall)
+            ?: throw IllegalArgumentException("Invalid AX.25 source callsign: $srcCall")
+    val validDst =
+        checkAX25Call(dstCall)
+            ?: throw IllegalArgumentException("Invalid AX.25 destination callsign: $dstCall")
+    val validDigis =
+        digipeaters.map { d ->
+            checkAX25Call(d) ?: throw IllegalArgumentException("Invalid AX.25 digipeater callsign: $d")
+        }
 
     val frameSize = (2 + validDigis.size) * 7 + 1 + 1 + body.size
     val out = ByteArray(frameSize)
@@ -186,7 +191,7 @@ fun encodeAx25Ui(
         offset = encodeAx25Address(out, offset, digi, isLast = i == validDigis.lastIndex, bit7 = false)
     }
 
-    out[offset++] = 0x03           // control: UI frame
+    out[offset++] = 0x03 // control: UI frame
     out[offset++] = 0xF0.toByte() // PID: no layer 3 (APRS)
     body.copyInto(out, offset)
 
@@ -197,7 +202,10 @@ fun encodeAx25Ui(
 
 private class DecodedAddress(val callString: String, val hBit: Boolean, val isLast: Boolean)
 
-private fun decodeAx25Address(frame: ByteArray, offset: Int): DecodedAddress {
+private fun decodeAx25Address(
+    frame: ByteArray,
+    offset: Int,
+): DecodedAddress {
     val sb = StringBuilder(6)
     for (i in 0 until 6) {
         sb.append(((frame[offset + i].toInt() and 0xFF) ushr 1).toChar())
