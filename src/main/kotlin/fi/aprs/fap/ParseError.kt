@@ -35,6 +35,9 @@ object ParseError {
     const val NO_BODY = "no_body"
     const val TYPE_NOT_SUPPORTED = "type_not_supported"
     const val EXP_UNSUPP = "exp_unsupp"
+    const val THIRDPARTY_NO_BODY = "3rd_party_no_body"
+    const val THIRDPARTY_NESTED = "3rd_party_nested"
+    const val THIRDPARTY_NOT_ALLOWED = "3rd_party_not_allowed"
 
     // Position
     const val LOC_AMB_INV = "loc_amb_inv"

@@ -140,8 +140,11 @@ fun parseAx25(
     p.header = ax25Frame.buildHeader()
     p.body = ax25Frame.body
 
+    // This is the RF decode path, where APRS third-party encapsulation is valid.
+    val rfOptions = if (options.allowThirdParty) options else options.copy(allowThirdParty = true)
+
     return try {
-        p.parseBody(options)
+        p.parseBody(rfOptions)
         Ax25ParseResult(frame = ax25Frame, monitorLine = monitorLine, packet = p, parseError = null)
     } catch (e: ParseException) {
         Ax25ParseResult(frame = ax25Frame, monitorLine = monitorLine, packet = null, parseError = e)

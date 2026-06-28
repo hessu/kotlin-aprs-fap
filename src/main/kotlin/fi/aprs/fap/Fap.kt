@@ -170,6 +170,16 @@ internal fun Packet.parseBody(options: ParseOptions) {
         '>' -> parseStatus(options)
         '<' -> parseCapabilities(options)
         '_' -> parseWeatherPositionless(options)
+        '}' -> {
+            // Third-party encapsulation is only valid on RF. When not allowed,
+            // fail rather than fall through to last-resort parsing, which would
+            // mis-attribute the inner frame's position to the outer callsign.
+            if (options.allowThirdParty) {
+                parseThirdParty(options)
+            } else {
+                fail(ParseError.THIRDPARTY_NOT_ALLOWED, "third-party packets are not allowed in this context")
+            }
+        }
         '$' -> {
             val bodyStr = bodyAsString()
             if (bodyStr.startsWith("\$ULTW")) parseULTW(options) else parseNMEA(options)
@@ -189,6 +199,58 @@ internal fun Packet.parseBody(options: ParseOptions) {
         }
         else -> parsePositionOrBeacon(options)
     }
+}
+
+/**
+ * Parses an APRS "third party" packet (body type identifier `}`).
+ *
+ * A third-party packet encapsulates a complete, original APRS frame inside the
+ * body of a relaying frame — typically produced by an igate injecting a packet
+ * heard on one medium (e.g. APRS-IS) onto another (e.g. RF), or vice versa.
+ * The wire form of the body is:
+ *
+ * ```
+ * }SRC>DST,PATH:innerbody
+ * ```
+ *
+ * where everything after the leading `}` is itself a complete TNC2-format
+ * packet. The header already parsed for this [Packet] describes the *outer*
+ * (relaying) frame; it is moved to the `outer*` fields, and the encapsulated
+ * inner frame is parsed in its place so that [srcCallsign], [dstCallsign],
+ * [digipeaters] and all content fields describe the *original* station.
+ *
+ * Only a single layer of encapsulation is supported: if the inner frame is
+ * itself a third-party packet (its body again begins with `}`), parsing fails
+ * with [ParseError.THIRDPARTY_NESTED].
+ */
+internal fun Packet.parseThirdParty(options: ParseOptions) {
+    // The header parsed so far belongs to the outer (relaying) frame: record it.
+    thirdParty = true
+    outerSrcCallsign = srcCallsign
+    outerDstCallsign = dstCallsign
+    outerDigipeaters = digipeaters
+
+    // Everything after the leading '}' is a complete TNC2 packet "HDR:innerbody".
+    val inner = body.sliceArray(1 until body.size)
+    val colonIdx = inner.indexOf(':'.code.toByte())
+    if (colonIdx < 0) fail(ParseError.THIRDPARTY_NO_BODY, "no inner packet body in third-party packet")
+
+    header = inner.sliceArray(0 until colonIdx).toString(Charsets.ISO_8859_1)
+    body = inner.sliceArray(colonIdx + 1 until inner.size)
+
+    // Reject a second layer of encapsulation: only one is supported.
+    if (body.isNotEmpty() && body[0] == '}'.code.toByte()) {
+        fail(ParseError.THIRDPARTY_NESTED, "nested third-party encapsulation is not supported")
+    }
+
+    // parseHeader appends to digipeaters; reset the outer path first.
+    digipeaters = emptyList()
+
+    // The encapsulated frame is always TNC2 text format with APRS-IS callsign
+    // rules, even when the outer frame arrived as a binary AX.25 RF frame.
+    val innerOptions = if (options.isAX25) options.copy(isAX25 = false) else options
+    parseHeader(innerOptions)
+    parseBody(innerOptions)
 }
 
 internal fun Packet.parsePositionOrBeacon(options: ParseOptions) {
