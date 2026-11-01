@@ -217,9 +217,10 @@ const val AX25_CTRL_UI = 0x03
 const val AX25_PID_APRS = 0xF0
 
 /**
- * The two reserved bits of an SSID octet. The AX.25 specification says they should be set
- * to one when not used, and libfap, aprx and the TNCs do so; every address this library
- * encodes carries them. Decoding ignores them.
+ * The two reserved bits of an SSID octet (bits 6 and 5). AX.25 v2.2, sections 3.12.2 to
+ * 3.12.4: "They may be used in an agreed-upon manner in individual networks. When not
+ * implemented, they are set to one." libfap, aprx and the TNCs set them, and so does every
+ * address this library encodes. Decoding ignores them, as other networks may use them.
  */
 const val AX25_SSID_RESERVED = 0x60
 
