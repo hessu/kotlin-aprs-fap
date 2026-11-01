@@ -165,6 +165,9 @@ fun parseAx25(
  * [digipeaters] is the outgoing path without trailing stars,
  * e.g. `listOf("WIDE1-1", "WIDE2-1")`.
  *
+ * The destination carries the C-bit (command frame) and every address the reserved SSID
+ * bits ([AX25_SSID_RESERVED]), as libfap and aprx write them.
+ *
  * Throws [IllegalArgumentException] for any invalid AX.25 callsign.
  */
 fun encodeAx25Ui(
@@ -212,6 +215,13 @@ const val AX25_CTRL_UI = 0x03
 
 /** AX.25 protocol identifier "no layer 3", the PID of every APRS frame. */
 const val AX25_PID_APRS = 0xF0
+
+/**
+ * The two reserved bits of an SSID octet. The AX.25 specification says they should be set
+ * to one when not used, and libfap, aprx and the TNCs do so; every address this library
+ * encodes carries them. Decoding ignores them.
+ */
+const val AX25_SSID_RESERVED = 0x60
 
 /**
  * Replaces the digipeater path of a raw AX.25 frame, as a digipeater does when it
@@ -325,7 +335,7 @@ private fun encodeAx25Address(
         out[offset + i] = (padded[i].code shl 1).toByte()
     }
 
-    var ssidByte = ssid shl 1
+    var ssidByte = AX25_SSID_RESERVED or (ssid shl 1)
     if (bit7) ssidByte = ssidByte or 0x80
     if (isLast) ssidByte = ssidByte or 0x01
     out[offset + 6] = ssidByte.toByte()

@@ -20,7 +20,7 @@ class Ax25Test {
         assertEquals('S'.code shl 1, frame[3].toInt() and 0xFF)
         assertEquals(' '.code shl 1, frame[4].toInt() and 0xFF)
         assertEquals(' '.code shl 1, frame[5].toInt() and 0xFF)
-        assertEquals(0x80, frame[6].toInt() and 0xFF) // C=1, ssid=0, isLast=0
+        assertEquals(0xE0, frame[6].toInt() and 0xFF) // C=1, reserved=11, ssid=0, isLast=0
 
         // Source "OH7LZB": C-bit clear, ssid=0, isLast=1 (no digipeaters follow)
         assertEquals('O'.code shl 1, frame[7].toInt() and 0xFF)
@@ -29,7 +29,7 @@ class Ax25Test {
         assertEquals('L'.code shl 1, frame[10].toInt() and 0xFF)
         assertEquals('Z'.code shl 1, frame[11].toInt() and 0xFF)
         assertEquals('B'.code shl 1, frame[12].toInt() and 0xFF)
-        assertEquals(0x01, frame[13].toInt() and 0xFF) // C=0, ssid=0, isLast=1
+        assertEquals(0x61, frame[13].toInt() and 0xFF) // C=0, reserved=11, ssid=0, isLast=1
 
         // ctrl + pid
         assertEquals(0x03, frame[14].toInt() and 0xFF)
@@ -47,17 +47,17 @@ class Ax25Test {
         // dst(7) + src(7) + digi1(7) + digi2(7) + ctrl(1) + pid(1) + body(4) = 34
         assertEquals(34, frame.size)
 
-        // Destination SSID: C=1, ssid=0, not last
-        assertEquals(0x80, frame[6].toInt() and 0xFF)
+        // Destination SSID: C=1, reserved bits, ssid=0, not last
+        assertEquals(0xE0, frame[6].toInt() and 0xFF)
 
-        // Source SSID: C=0, ssid=9, not last (digipeaters follow)
-        assertEquals(9 shl 1, frame[13].toInt() and 0xFF)
+        // Source SSID: C=0, reserved bits, ssid=9, not last (digipeaters follow)
+        assertEquals(0x60 or (9 shl 1), frame[13].toInt() and 0xFF)
 
-        // Digi 1 (WIDE1-1): H=0, ssid=1, not last
-        assertEquals(1 shl 1, frame[20].toInt() and 0xFF)
+        // Digi 1 (WIDE1-1): H=0, reserved bits, ssid=1, not last
+        assertEquals(0x60 or (1 shl 1), frame[20].toInt() and 0xFF)
 
-        // Digi 2 (WIDE2-1): H=0, ssid=1, last
-        assertEquals((1 shl 1) or 1, frame[27].toInt() and 0xFF)
+        // Digi 2 (WIDE2-1): H=0, reserved bits, ssid=1, last
+        assertEquals(0x60 or (1 shl 1) or 1, frame[27].toInt() and 0xFF)
 
         // ctrl + pid
         assertEquals(0x03, frame[28].toInt() and 0xFF)
@@ -260,10 +260,10 @@ class Ax25Test {
         val out = rewriteAx25Path(original, listOf(Digipeater("OH7RDA-1", true), Digipeater("WIDE2-1", false)))
 
         assertEquals(original.size, out.size)
-        // Digi 1 SSID byte at offset 20: H=1, ssid=1, not last
-        assertEquals(0x80 or (1 shl 1), out[20].toInt() and 0xFF)
-        // Digi 2 SSID byte at offset 27: H=0, ssid=1, last
-        assertEquals((1 shl 1) or 1, out[27].toInt() and 0xFF)
+        // Digi 1 SSID byte at offset 20: H=1, reserved bits, ssid=1, not last
+        assertEquals(0x80 or 0x60 or (1 shl 1), out[20].toInt() and 0xFF)
+        // Digi 2 SSID byte at offset 27: H=0, reserved bits, ssid=1, last
+        assertEquals(0x60 or (1 shl 1) or 1, out[27].toInt() and 0xFF)
 
         val result = parseAx25(out)
         assertEquals("OH7LZB-9>APFII0,OH7RDA-1*,WIDE2-1:!6028.51N/02505.68E>", result.monitorLine)
@@ -301,9 +301,10 @@ class Ax25Test {
     fun testRewritePathPreservesDstAndSrcBytes() {
         val body = ">x".toByteArray(Charsets.ISO_8859_1)
         val original = encodeAx25Ui("OH7LZB-9", "APFII0", listOf("WIDE1-1"), body).toMutableList()
-        // Set the reserved bits (0x60) on dst and src SSID bytes, like real TNCs do.
-        original[6] = (original[6].toInt() or 0x60).toByte()
-        original[13] = (original[13].toInt() or 0x60).toByte()
+        // Clear the reserved bits (0x60) on the dst and src SSID bytes, unlike our own encoder,
+        // to show that the rewrite copies the originator's bytes rather than re-encoding them.
+        original[6] = (original[6].toInt() and 0x60.inv()).toByte()
+        original[13] = (original[13].toInt() and 0x60.inv()).toByte()
 
         val out = rewriteAx25Path(original.toByteArray(), listOf(Digipeater("OH7RDA", true)))
 
