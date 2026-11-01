@@ -238,4 +238,117 @@ class Ax25Test {
         assertEquals(0, result.frame.digipeaters.size)
         assertContentEquals(body, result.frame.body)
     }
+
+    // ── rewriteAx25Path ───────────────────────────────────────────────────────
+
+    @Test
+    fun testRewritePathSubstitutesDigiWithHBit() {
+        val body = "!6028.51N/02505.68E>".toByteArray(Charsets.ISO_8859_1)
+        val original = encodeAx25Ui("OH7LZB-9", "APFII0", listOf("WIDE1-1", "WIDE2-1"), body)
+
+        val out = rewriteAx25Path(original, listOf(Digipeater("OH7RDA-1", true), Digipeater("WIDE2-1", false)))
+
+        assertEquals(original.size, out.size)
+        // Digi 1 SSID byte at offset 20: H=1, ssid=1, not last
+        assertEquals(0x80 or (1 shl 1), out[20].toInt() and 0xFF)
+        // Digi 2 SSID byte at offset 27: H=0, ssid=1, last
+        assertEquals((1 shl 1) or 1, out[27].toInt() and 0xFF)
+
+        val result = parseAx25(out)
+        assertEquals("OH7LZB-9>APFII0,OH7RDA-1*,WIDE2-1:!6028.51N/02505.68E>", result.monitorLine)
+        assertTrue(result.frame.digipeaters[0].wasDigied)
+        assertFalse(result.frame.digipeaters[1].wasDigied)
+    }
+
+    @Test
+    fun testRewritePathInsertsDigiAndGrowsFrame() {
+        val body = ">test".toByteArray(Charsets.ISO_8859_1)
+        val original = encodeAx25Ui("OH7LZB", "APRS", listOf("WIDE2-2"), body)
+
+        val out = rewriteAx25Path(original, listOf(Digipeater("OH7RDA", true), Digipeater("WIDE2-1", false)))
+
+        assertEquals(original.size + 7, out.size)
+        assertEquals("OH7LZB>APRS,OH7RDA*,WIDE2-1:>test", parseAx25(out).monitorLine)
+    }
+
+    @Test
+    fun testRewritePathPreservesInfoFieldBytesBeyondCr() {
+        // parseAx25 truncates the body at CR, but a digipeater must repeat the frame
+        // with the information field intact.
+        val body = ">status\r\u0000trailing".toByteArray(Charsets.ISO_8859_1)
+        val original = encodeAx25Ui("OH7LZB", "APRS", listOf("WIDE1-1"), body)
+
+        val out = rewriteAx25Path(original, listOf(Digipeater("OH7RDA", true)))
+
+        // Everything after the address field (ctrl, pid, info) is identical.
+        assertContentEquals(original.sliceArray(21 until original.size), out.sliceArray(21 until out.size))
+        assertEquals(0x03, out[21].toInt() and 0xFF)
+        assertEquals(0xF0, out[22].toInt() and 0xFF)
+    }
+
+    @Test
+    fun testRewritePathPreservesDstAndSrcBytes() {
+        val body = ">x".toByteArray(Charsets.ISO_8859_1)
+        val original = encodeAx25Ui("OH7LZB-9", "APFII0", listOf("WIDE1-1"), body).toMutableList()
+        // Set the reserved bits (0x60) on dst and src SSID bytes, like real TNCs do.
+        original[6] = (original[6].toInt() or 0x60).toByte()
+        original[13] = (original[13].toInt() or 0x60).toByte()
+
+        val out = rewriteAx25Path(original.toByteArray(), listOf(Digipeater("OH7RDA", true)))
+
+        assertContentEquals(original.toByteArray().sliceArray(0 until 14), out.sliceArray(0 until 14))
+    }
+
+    @Test
+    fun testRewritePathEmptyToPathSetsSrcNotLast() {
+        val body = ">x".toByteArray(Charsets.ISO_8859_1)
+        val original = encodeAx25Ui("OH7LZB", "APRS", emptyList(), body)
+        assertEquals(0x01, original[13].toInt() and 0x01)
+
+        val out = rewriteAx25Path(original, listOf(Digipeater("OH7RDA", true)))
+
+        assertEquals(0x00, out[13].toInt() and 0x01)
+        assertEquals(original.size + 7, out.size)
+        assertEquals("OH7LZB>APRS,OH7RDA*:>x", parseAx25(out).monitorLine)
+    }
+
+    @Test
+    fun testRewritePathToEmptySetsSrcLast() {
+        val body = ">x".toByteArray(Charsets.ISO_8859_1)
+        val original = encodeAx25Ui("OH7LZB", "APRS", listOf("WIDE1-1", "WIDE2-1"), body)
+
+        val out = rewriteAx25Path(original, emptyList())
+
+        assertEquals(0x01, out[13].toInt() and 0x01)
+        assertEquals(original.size - 14, out.size)
+        assertEquals("OH7LZB>APRS:>x", parseAx25(out).monitorLine)
+    }
+
+    @Test
+    fun testRewritePathRejectsTooManyDigipeaters() {
+        val original = encodeAx25Ui("OH7LZB", "APRS", listOf("WIDE1-1"), ByteArray(0))
+        val nine = (1..9).map { Digipeater("DIGI$it", true) }
+        assertFailsWith<IllegalArgumentException> { rewriteAx25Path(original, nine) }
+    }
+
+    @Test
+    fun testRewritePathRejectsInvalidCallsign() {
+        val original = encodeAx25Ui("OH7LZB", "APRS", listOf("WIDE1-1"), ByteArray(0))
+        assertFailsWith<IllegalArgumentException> {
+            rewriteAx25Path(original, listOf(Digipeater("TOOLONGCALL", true)))
+        }
+    }
+
+    @Test
+    fun testRewritePathRejectsShortFrame() {
+        assertFailsWith<Ax25DecodeException> { rewriteAx25Path(ByteArray(15), emptyList()) }
+    }
+
+    @Test
+    fun testRewritePathRejectsTruncatedAddressField() {
+        // src says "more addresses follow" but the frame ends right after it.
+        val frame = encodeAx25Ui("OH7LZB", "APRS", emptyList(), ByteArray(0)).toMutableList()
+        frame[13] = (frame[13].toInt() and 0xFE).toByte()
+        assertFailsWith<Ax25DecodeException> { rewriteAx25Path(frame.toByteArray(), emptyList()) }
+    }
 }

@@ -198,6 +198,82 @@ fun encodeAx25Ui(
     return out
 }
 
+/** Maximum number of digipeater address fields in an AX.25 frame. */
+const val AX25_MAX_DIGIPEATERS = 8
+
+/**
+ * Replaces the digipeater path of a raw AX.25 frame, as a digipeater does when it
+ * repeats a packet.
+ *
+ * The destination and source address fields, the control and PID bytes and the
+ * information field are copied from [frame] unchanged; only the digipeater address
+ * fields are rewritten from [digipeaters], with each [Digipeater.wasDigied] written
+ * as the AX.25 H-bit (has-been-repeated). The result is therefore byte-identical to
+ * the original frame apart from the path — including any trailing CR/LF or other
+ * bytes in the information field that [parseAx25] strips from [Ax25Frame.body].
+ *
+ * Throws [Ax25DecodeException] when [frame] is too short or its address field is
+ * malformed, and [IllegalArgumentException] for an invalid digipeater callsign or a
+ * path longer than [AX25_MAX_DIGIPEATERS].
+ */
+fun rewriteAx25Path(
+    frame: ByteArray,
+    digipeaters: List<Digipeater>,
+): ByteArray {
+    // Minimum viable frame: dst(7) + src(7) + ctrl(1) + pid(1) = 16 bytes.
+    if (frame.size < 16) {
+        throw Ax25DecodeException("AX.25 frame too short: ${frame.size} bytes")
+    }
+    require(digipeaters.size <= AX25_MAX_DIGIPEATERS) {
+        "AX.25 path too long: ${digipeaters.size} digipeaters"
+    }
+    val validDigis =
+        digipeaters.map { d ->
+            val call =
+                checkAX25Call(d.call)
+                    ?: throw IllegalArgumentException("Invalid AX.25 digipeater callsign: ${d.call}")
+            Digipeater(call, d.wasDigied)
+        }
+
+    // Find the end of the incoming address field: the last address has bit 0 of its
+    // SSID byte set. dst and src are always present; digipeaters follow src unless
+    // src is flagged as the last address.
+    var addrEnd = 14
+    if ((frame[13].toInt() and 0x01) == 0) {
+        var count = 0
+        while (true) {
+            if (addrEnd + 7 > frame.size) {
+                throw Ax25DecodeException("AX.25 frame truncated inside address field")
+            }
+            addrEnd += 7
+            count++
+            if ((frame[addrEnd - 1].toInt() and 0x01) != 0) break
+            if (count >= AX25_MAX_DIGIPEATERS) {
+                throw Ax25DecodeException("AX.25 address field has more than $AX25_MAX_DIGIPEATERS digipeaters")
+            }
+        }
+    }
+    if (addrEnd + 2 > frame.size) {
+        throw Ax25DecodeException("AX.25 frame truncated: no room for ctrl+pid after address fields")
+    }
+
+    val tailSize = frame.size - addrEnd // ctrl + pid + information field
+    val out = ByteArray(14 + validDigis.size * 7 + tailSize)
+
+    // dst + src verbatim; src's "last address" bit depends on whether a path follows.
+    frame.copyInto(out, 0, 0, 14)
+    val srcLast = if (validDigis.isEmpty()) 0x01 else 0x00
+    out[13] = ((out[13].toInt() and 0xFE) or srcLast).toByte()
+
+    var offset = 14
+    for ((i, digi) in validDigis.withIndex()) {
+        offset = encodeAx25Address(out, offset, digi.call, isLast = i == validDigis.lastIndex, bit7 = digi.wasDigied)
+    }
+    frame.copyInto(out, offset, addrEnd, frame.size)
+
+    return out
+}
+
 // ── Internal helpers ──────────────────────────────────────────────────────────
 
 private class DecodedAddress(val callString: String, val hBit: Boolean, val isLast: Boolean)
