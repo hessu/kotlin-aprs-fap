@@ -75,7 +75,8 @@ data class Ax25ParseResult(
 /**
  * Decodes a raw AX.25 UI frame and parses its APRS payload.
  *
- * Throws [Ax25DecodeException] for structural failures (frame too short, wrong control byte).
+ * Throws [Ax25DecodeException] for structural failures (frame too short, not a UI frame, PID
+ * other than [AX25_PID_APRS]).
  * APRS body parse failures are captured in [Ax25ParseResult.parseError] rather than thrown,
  * so callers always receive the [Ax25ParseResult.monitorLine] for logging or igating.
  */
@@ -111,11 +112,16 @@ fun parseAx25(
     }
 
     val ctrl = frame[offset].toInt() and 0xFF
-    offset++ // ctrl
-    offset++ // pid (accept any PID value; non-APRS PIDs result in a body parse failure below)
+    val pid = frame[offset + 1].toInt() and 0xFF
+    offset += 2 // ctrl + pid
 
-    if (ctrl != 0x03) {
+    if (ctrl != AX25_CTRL_UI) {
         throw Ax25DecodeException("Not a UI frame: ctrl=0x${ctrl.toString(16).padStart(2, '0')}")
+    }
+    // Only PID 0xF0 (no layer 3) carries APRS; anything else is some other protocol on the
+    // channel and is not an APRS packet at all. Same rule as libfap's fap_ax25_to_tnc2().
+    if (pid != AX25_PID_APRS) {
+        throw Ax25DecodeException("Not an APRS frame: pid=0x${pid.toString(16).padStart(2, '0')}")
     }
 
     // APRS info fields are single-line: CR/LF terminate the packet. Truncate
@@ -191,8 +197,8 @@ fun encodeAx25Ui(
         offset = encodeAx25Address(out, offset, digi, isLast = i == validDigis.lastIndex, bit7 = false)
     }
 
-    out[offset++] = 0x03 // control: UI frame
-    out[offset++] = 0xF0.toByte() // PID: no layer 3 (APRS)
+    out[offset++] = AX25_CTRL_UI.toByte()
+    out[offset++] = AX25_PID_APRS.toByte()
     body.copyInto(out, offset)
 
     return out
@@ -200,6 +206,12 @@ fun encodeAx25Ui(
 
 /** Maximum number of digipeater address fields in an AX.25 frame. */
 const val AX25_MAX_DIGIPEATERS = 8
+
+/** AX.25 control field of an unnumbered information (UI) frame, the only kind APRS uses. */
+const val AX25_CTRL_UI = 0x03
+
+/** AX.25 protocol identifier "no layer 3", the PID of every APRS frame. */
+const val AX25_PID_APRS = 0xF0
 
 /**
  * Replaces the digipeater path of a raw AX.25 frame, as a digipeater does when it

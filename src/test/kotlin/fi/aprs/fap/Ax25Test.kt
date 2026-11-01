@@ -204,6 +204,17 @@ class Ax25Test {
         }
     }
 
+    @Test
+    fun testDecodeNotAprsPid() {
+        val body = ">status".toByteArray(Charsets.ISO_8859_1)
+        val frame = encodeAx25Ui("OH7LZB", "APRS", emptyList(), body).toMutableList()
+        // PID byte is at offset 15 for a frame with no digipeaters; 0xCC is IP, not APRS
+        frame[15] = 0xCC.toByte()
+        assertFailsWith<Ax25DecodeException> {
+            parseAx25(frame.toByteArray())
+        }
+    }
+
     // ── Round-trip ────────────────────────────────────────────────────────────
 
     @Test
